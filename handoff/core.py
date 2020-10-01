@@ -4,6 +4,7 @@ import json
 import math
 import sqlite3
 import uuid
+import unicodedata
 from contextlib import contextmanager
 
 
@@ -12,7 +13,7 @@ def canonical(value):
 
 
 def identifier(value, name):
-    if not isinstance(value, str) or not value.strip() or len(value) > 128:
+    if not isinstance(value, str) or not value.strip() or len(value) > 128 or any(unicodedata.category(c).startswith("C") for c in value):
         raise ValueError(name + " must be a nonempty string of at most 128 characters")
     return value
 
