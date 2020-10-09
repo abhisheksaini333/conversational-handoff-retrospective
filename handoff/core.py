@@ -66,10 +66,12 @@ class Coordinator:
         db.execute("INSERT INTO receipts VALUES(?,?,?,?)", (scope, event, fingerprint, canonical(result)))
 
     def conversation(self, conversation):
+        identifier(conversation, "conversation")
         with self._transaction() as db:
             return self._get(db, "conversations", conversation)
 
     def ticket(self, ticket_id):
+        identifier(ticket_id, "ticket_id")
         with self._transaction() as db:
             result = self._get(db, "tickets", ticket_id)
             if result is None:
@@ -121,6 +123,7 @@ class Coordinator:
             return result
 
     def dispatch(self, ticket_id, desk):
+        identifier(ticket_id, "ticket_id")
         with self._transaction() as db:
             ticket = self._get(db, "tickets", ticket_id)
             if ticket is None:
@@ -143,6 +146,7 @@ class Coordinator:
             return state
 
     def complete(self, ticket_id, event_id, before_resume=None):
+        identifier(ticket_id, "ticket_id")
         identifier(event_id, "event_id")
         with self._transaction() as db:
             prior = self._replay(db, "complete:"+ticket_id, event_id, ticket_id)

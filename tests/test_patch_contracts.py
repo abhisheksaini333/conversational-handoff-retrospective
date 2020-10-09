@@ -30,3 +30,9 @@ class PatchContracts(unittest.TestCase):
             with self.subTest(value=repr(value)), self.assertRaises(ValueError):
                 identifier(value, "id")
         self.assertEqual(identifier("conversation-東京", "id"), "conversation-東京")
+
+    def test_public_lookups_and_transitions_validate_identifiers(self):
+        calls = [lambda: self.core.conversation(None), lambda: self.core.ticket(""),
+                 lambda: self.core.dispatch([], Desk()), lambda: self.core.complete(None, "e")]
+        for call in calls:
+            with self.assertRaises(ValueError): call()
