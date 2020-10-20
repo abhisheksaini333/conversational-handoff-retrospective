@@ -36,3 +36,7 @@ class PatchContracts(unittest.TestCase):
                  lambda: self.core.dispatch([], Desk()), lambda: self.core.complete(None, "e")]
         for call in calls:
             with self.assertRaises(ValueError): call()
+
+    def test_integral_confidence_replays_as_float(self):
+        first = self.core.message("c", "e", "help", "request_human", 1)
+        self.assertEqual(first, self.core.message("c", "e", "help", "request_human", 1.0))

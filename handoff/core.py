@@ -90,6 +90,7 @@ class Coordinator:
             raise ValueError("text must contain 1 to 2000 characters")
         if isinstance(confidence, bool) or not isinstance(confidence, (int, float)) or not math.isfinite(confidence) or not 0 <= confidence <= 1:
             raise ValueError("confidence must be finite and between zero and one")
+        confidence = float(confidence)
         if active_form is not None:
             identifier(active_form, "active_form")
         context_provided = context is not None
