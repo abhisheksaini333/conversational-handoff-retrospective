@@ -40,3 +40,15 @@ class PatchContracts(unittest.TestCase):
     def test_integral_confidence_replays_as_float(self):
         first = self.core.message("c", "e", "help", "request_human", 1)
         self.assertEqual(first, self.core.message("c", "e", "help", "request_human", 1.0))
+
+    def test_adapter_cannot_mutate_dispatch_identity(self):
+        ticket = self.request()["ticket_id"]
+        class MutatingDesk:
+            def accept(self, payload):
+                answer = {"accepted": True, "ticket_id": payload["id"]}
+                payload["conversation"] = "somebody-else"
+                payload["context"].clear()
+                return answer
+        result = self.core.dispatch(ticket, MutatingDesk())
+        self.assertEqual(result["state"], "human")
+        self.assertTrue(self.core.ticket(ticket)["context"])

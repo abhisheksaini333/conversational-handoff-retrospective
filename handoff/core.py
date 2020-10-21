@@ -1,4 +1,5 @@
 """Transactional local coordinator; no network or framework dependency."""
+import copy
 import hashlib
 import json
 import math
@@ -134,7 +135,7 @@ class Coordinator:
             ticket["delivery_attempts"] += 1
             self._put(db, "tickets", ticket_id, ticket)
         # Do not hold the SQLite write lock across human-service I/O.
-        ack = desk.accept(ticket)
+        ack = desk.accept(copy.deepcopy(ticket))
         if not isinstance(ack, dict) or ack.get("accepted") is not True or ack.get("ticket_id") != ticket_id:
             raise ValueError("human acknowledgement does not match this ticket")
         with self._transaction() as db:
