@@ -52,3 +52,11 @@ class PatchContracts(unittest.TestCase):
         result = self.core.dispatch(ticket, MutatingDesk())
         self.assertEqual(result["state"], "human")
         self.assertTrue(self.core.ticket(ticket)["context"])
+
+    def test_resume_callback_cannot_poison_completion_receipt(self):
+        ticket = self.accepted()
+        def mutate(result): result.update(conversation="other", state="human")
+        answer = self.core.complete(ticket, "done", before_resume=mutate)
+        self.assertEqual(answer["conversation"], "c1")
+        self.assertEqual(answer["state"], "bot")
+        self.assertEqual(self.core.complete(ticket, "done"), answer)

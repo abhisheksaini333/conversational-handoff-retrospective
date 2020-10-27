@@ -163,7 +163,7 @@ class Coordinator:
             result = {"conversation": state["id"], "state": "bot", "ticket_id": ticket_id, "resume_form": ticket["form"]}
             # Bounded callback; a failed resume leaves ownership with the human.
             if before_resume is not None:
-                before_resume(result)
+                before_resume(copy.deepcopy(result))
             ticket["state"] = "completed"
             state.update(state="bot", ticket_id=None, form=ticket["form"])
             self._put(db, "tickets", ticket_id, ticket)
