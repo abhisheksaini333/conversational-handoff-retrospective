@@ -31,10 +31,10 @@ class Coordinator:
             db.execute("CREATE TABLE IF NOT EXISTS receipts (scope TEXT, event TEXT, fingerprint TEXT NOT NULL, result TEXT NOT NULL, PRIMARY KEY(scope,event))")
 
     @contextmanager
-    def _transaction(self):
+    def _transaction(self, readonly=False):
         db = sqlite3.connect(self.database, timeout=10)
         try:
-            db.execute("BEGIN IMMEDIATE")
+            db.execute("BEGIN" if readonly else "BEGIN IMMEDIATE")
             yield db
             db.commit()
         except BaseException:
@@ -68,19 +68,19 @@ class Coordinator:
 
     def conversation(self, conversation):
         identifier(conversation, "conversation")
-        with self._transaction() as db:
+        with self._transaction(readonly=True) as db:
             return self._get(db, "conversations", conversation)
 
     def ticket(self, ticket_id):
         identifier(ticket_id, "ticket_id")
-        with self._transaction() as db:
+        with self._transaction(readonly=True) as db:
             result = self._get(db, "tickets", ticket_id)
             if result is None:
                 raise KeyError("ticket not found")
             return result
 
     def tickets(self):
-        with self._transaction() as db:
+        with self._transaction(readonly=True) as db:
             return [json.loads(row[0]) for row in db.execute("SELECT data FROM tickets ORDER BY rowid")]
 
     def message(self, conversation, event_id, text, intent, confidence, active_form=None, context=None):

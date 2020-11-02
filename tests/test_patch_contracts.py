@@ -60,3 +60,11 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(answer["conversation"], "c1")
         self.assertEqual(answer["state"], "bot")
         self.assertEqual(self.core.complete(ticket, "done"), answer)
+
+    def test_lookup_does_not_acquire_a_writer_lock(self):
+        ticket = self.request()["ticket_id"]
+        with sqlite3.connect(self.path) as db:
+            db.execute("BEGIN IMMEDIATE")
+            self.assertEqual(self.core.ticket(ticket)["id"], ticket)
+            self.assertEqual(self.core.conversation("c1")["state"], "pending")
+            self.assertEqual(len(self.core.tickets()), 1)
