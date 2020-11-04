@@ -68,3 +68,8 @@ class PatchContracts(unittest.TestCase):
             self.assertEqual(self.core.ticket(ticket)["id"], ticket)
             self.assertEqual(self.core.conversation("c1")["state"], "pending")
             self.assertEqual(len(self.core.tickets()), 1)
+
+    def test_ephemeral_database_configuration_is_rejected(self):
+        for database in ["", ":memory:"]:
+            with self.subTest(database=database), self.assertRaises(ValueError):
+                Coordinator(database)

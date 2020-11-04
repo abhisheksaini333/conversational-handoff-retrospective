@@ -23,6 +23,8 @@ class Coordinator:
     def __init__(self, database, threshold=0.6):
         if isinstance(threshold, bool) or not isinstance(threshold, (int, float)) or not 0 <= threshold <= 1:
             raise ValueError("threshold must be between zero and one")
+        if str(database) in ("", ":memory:"):
+            raise ValueError("database must be a persistent file path")
         self.database = database
         self.threshold = threshold
         with self._transaction() as db:
