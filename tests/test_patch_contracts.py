@@ -73,3 +73,10 @@ class PatchContracts(unittest.TestCase):
         for database in ["", ":memory:"]:
             with self.subTest(database=database), self.assertRaises(ValueError):
                 Coordinator(database)
+
+    def test_busy_timeout_is_configurable_and_validated(self):
+        core = Coordinator(self.path, busy_timeout=0.01)
+        self.assertEqual(core.busy_timeout, 0.01)
+        for invalid in [-1, 0, 61, True, math.inf, math.nan, "10"]:
+            with self.subTest(invalid=invalid), self.assertRaises(ValueError):
+                Coordinator(self.path, busy_timeout=invalid)

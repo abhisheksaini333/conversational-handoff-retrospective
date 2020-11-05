@@ -20,13 +20,16 @@ def identifier(value, name):
 
 
 class Coordinator:
-    def __init__(self, database, threshold=0.6):
+    def __init__(self, database, threshold=0.6, busy_timeout=10):
         if isinstance(threshold, bool) or not isinstance(threshold, (int, float)) or not 0 <= threshold <= 1:
             raise ValueError("threshold must be between zero and one")
         if str(database) in ("", ":memory:"):
             raise ValueError("database must be a persistent file path")
         self.database = database
         self.threshold = threshold
+        if isinstance(busy_timeout, bool) or not isinstance(busy_timeout, (int, float)) or not math.isfinite(busy_timeout) or not 0 < busy_timeout <= 60:
+            raise ValueError("busy_timeout must be finite and between zero and 60 seconds")
+        self.busy_timeout = busy_timeout
         with self._transaction() as db:
             db.execute("CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, data TEXT NOT NULL)")
             db.execute("CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, data TEXT NOT NULL)")
@@ -34,7 +37,7 @@ class Coordinator:
 
     @contextmanager
     def _transaction(self, readonly=False):
-        db = sqlite3.connect(self.database, timeout=10)
+        db = sqlite3.connect(self.database, timeout=self.busy_timeout)
         try:
             db.execute("BEGIN" if readonly else "BEGIN IMMEDIATE")
             yield db
