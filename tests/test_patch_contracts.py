@@ -80,3 +80,29 @@ class PatchContracts(unittest.TestCase):
         for invalid in [-1, 0, 61, True, math.inf, math.nan, "10"]:
             with self.subTest(invalid=invalid), self.assertRaises(ValueError):
                 Coordinator(self.path, busy_timeout=invalid)
+
+    def http(self, path, body=None, headers=None, method="POST"):
+        import http.client
+        import threading
+        from handoff.server import make_server
+        token = "local-test-credential-only"
+        server = make_server(self.core, token, port=0)
+        thread = threading.Thread(target=lambda: server.serve_forever(poll_interval=.01), daemon=True)
+        thread.start()
+        client = http.client.HTTPConnection("127.0.0.1", server.server_port, timeout=2)
+        actual = {"Authorization": "Bearer " + token, "Content-Type": "application/json"}
+        actual.update(headers or {})
+        try:
+            raw = body if isinstance(body, bytes) else json.dumps(body).encode() if body is not None else None
+            client.request(method, path, raw, actual)
+            response = client.getresponse()
+            payload = response.read()
+            return response.status, json.loads(payload) if payload else None, dict(response.getheaders())
+        finally:
+            client.close(); server.shutdown(); server.server_close(); thread.join()
+    def payload(self):
+        return dict(conversation="web", event_id="web-1", text="help", intent="request_human", confidence=.9)
+
+    def test_duplicate_json_fields_are_not_silently_overwritten(self):
+        self.assertEqual(self.http("/demo/desk", b'{"available":false,"available":true}')[0], 400)
+        self.assertEqual(self.http("/demo/desk", b'{"available":NaN}')[0], 400)

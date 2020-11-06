@@ -9,6 +9,7 @@ import urllib.request
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from handoff.core import Coordinator, canonical, identifier
+from handoff.http_contracts import strict_json
 
 
 class SimulatedDesk:
@@ -98,7 +99,7 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                 length=int(self.headers.get('Content-Length','0'))
                 if not 0<length<=65536:
                     self.reply(413,{'error':'body must be between 1 and 65536 bytes'});return
-                body=json.loads(self.rfile.read(length))
+                body=strict_json(self.rfile.read(length))
                 if not isinstance(body,dict): raise ValueError('body must be an object')
                 if self.path=='/handoffs':
                     if set(body)-{'conversation','event_id','text','intent','confidence','active_form','context'}:
