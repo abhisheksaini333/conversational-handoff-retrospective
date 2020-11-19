@@ -106,3 +106,8 @@ class PatchContracts(unittest.TestCase):
     def test_duplicate_json_fields_are_not_silently_overwritten(self):
         self.assertEqual(self.http("/demo/desk", b'{"available":false,"available":true}')[0], 400)
         self.assertEqual(self.http("/demo/desk", b'{"available":NaN}')[0], 400)
+
+    def test_unsupported_media_type_and_charset_are_415(self):
+        for content_type in ["text/plain", "application/json; charset=latin-1"]:
+            self.assertEqual(self.http("/demo/desk", {"available": True}, {"Content-Type": content_type})[0], 415)
+        self.assertEqual(self.http("/demo/desk", {"available": True}, {"Content-Type": "application/json; charset=utf-8"})[0], 200)
