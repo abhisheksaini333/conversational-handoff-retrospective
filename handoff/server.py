@@ -96,6 +96,8 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
         def do_POST(self):
             if not self.authorized(): return
             try:
+                if self.headers.get('Transfer-Encoding') or len(self.headers.get_all('Content-Length', [])) != 1:
+                    self.reply(400, {'error':'unambiguous Content-Length required'}); return
                 if self.headers.get_content_type() != 'application/json' or self.headers.get_content_charset('utf-8').lower() != 'utf-8':
                     self.reply(415, {'error':'UTF-8 application/json required'}); return
                 length=int(self.headers.get('Content-Length','0'))

@@ -111,3 +111,7 @@ class PatchContracts(unittest.TestCase):
         for content_type in ["text/plain", "application/json; charset=latin-1"]:
             self.assertEqual(self.http("/demo/desk", {"available": True}, {"Content-Type": content_type})[0], 415)
         self.assertEqual(self.http("/demo/desk", {"available": True}, {"Content-Type": "application/json; charset=utf-8"})[0], 200)
+
+    def test_ambiguous_body_framing_is_rejected(self):
+        status, _, _ = self.http("/demo/desk", {"available": True}, {"Transfer-Encoding": "chunked"})
+        self.assertEqual(status, 400)
