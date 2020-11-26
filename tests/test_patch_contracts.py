@@ -115,3 +115,9 @@ class PatchContracts(unittest.TestCase):
     def test_ambiguous_body_framing_is_rejected(self):
         status, _, _ = self.http("/demo/desk", {"available": True}, {"Transfer-Encoding": "chunked"})
         self.assertEqual(status, 400)
+
+    def test_acknowledged_http_response_has_no_stale_bot_reply(self):
+        status, result, _ = self.http("/handoffs", self.payload())
+        self.assertEqual(status, 200)
+        self.assertEqual(result["state"], "human")
+        self.assertIsNone(result["bot_reply"])
