@@ -121,3 +121,9 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(status, 200)
         self.assertEqual(result["state"], "human")
         self.assertIsNone(result["bot_reply"])
+
+    def test_unsupported_method_returns_json_405(self):
+        code, body, headers = self.http("/handoffs", method="PUT")
+        self.assertEqual(code, 405)
+        self.assertIn("POST", headers["Allow"])
+        self.assertEqual(body["error"], "method not allowed")

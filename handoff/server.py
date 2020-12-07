@@ -59,7 +59,7 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
         def log_message(self,*args):
             pass  # Avoid logging tokens, transcript text or query strings.
 
-        def reply(self,code,payload):
+        def reply(self,code,payload,extra_headers=None):
             raw=canonical(payload).encode()
             self.send_response(code)
             self.send_header('Content-Type','application/json')
@@ -67,7 +67,14 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
             self.send_header('Cache-Control','no-store')
             self.send_header('X-Content-Type-Options','nosniff')
             self.send_header('Content-Security-Policy',"default-src 'none'; frame-ancestors 'none'")
+            for name, value in (extra_headers or {}).items():
+                self.send_header(name, value)
             self.end_headers();self.wfile.write(raw)
+
+        def method_not_allowed(self):
+            self.reply(405, {'error':'method not allowed'}, {'Allow':'GET, POST'})
+
+        do_PUT = do_DELETE = do_PATCH = do_OPTIONS = method_not_allowed
 
         def authorized(self):
             supplied=self.headers.get('Authorization','')
