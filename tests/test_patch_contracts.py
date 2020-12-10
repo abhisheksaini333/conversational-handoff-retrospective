@@ -133,3 +133,10 @@ class PatchContracts(unittest.TestCase):
         for token in [12345678901234567, b"sixteencharacters", "line\nbreak-token-long", " " * 20]:
             with self.subTest(token=repr(token)), self.assertRaises(ValueError):
                 make_server(self.core, token, port=0)
+
+    def test_ticket_list_storage_failure_is_json_503(self):
+        def unavailable(): raise sqlite3.OperationalError("private database filename")
+        self.core.tickets = unavailable
+        code, body, _ = self.http("/tickets", method="GET")
+        self.assertEqual(code, 503)
+        self.assertNotIn("private", str(body))

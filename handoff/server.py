@@ -87,7 +87,11 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
             if self.path=='/health':
                 self.reply(200,{'status':'ok','mode':'synthetic-demo'})
             elif self.authorized():
-                if self.path=='/tickets': self.reply(200,{'tickets':core.tickets()})
+                if self.path=='/tickets':
+                    try:
+                        self.reply(200,{'tickets':core.tickets()})
+                    except sqlite3.Error:
+                        self.reply(503,{'error':'storage unavailable'})
                 elif self.path.startswith('/conversations/'):
                     try:
                         conversation=urllib.parse.unquote(self.path[len('/conversations/'):])
