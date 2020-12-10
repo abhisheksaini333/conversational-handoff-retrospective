@@ -38,7 +38,7 @@ def resume_events(result):
 
 
 def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_token=None):
-    if not token or len(token)<16:
+    if not isinstance(token, str) or len(token)<16 or any(c.isspace() or ord(c)<33 or ord(c)>126 for c in token):
         raise ValueError('HANDOFF_TOKEN must contain at least 16 characters')
     desk=SimulatedDesk(core.database)
 

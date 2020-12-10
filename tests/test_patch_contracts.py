@@ -127,3 +127,9 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(code, 405)
         self.assertIn("POST", headers["Allow"])
         self.assertEqual(body["error"], "method not allowed")
+
+    def test_server_rejects_nonstring_or_multiline_credentials(self):
+        from handoff.server import make_server
+        for token in [12345678901234567, b"sixteencharacters", "line\nbreak-token-long", " " * 20]:
+            with self.subTest(token=repr(token)), self.assertRaises(ValueError):
+                make_server(self.core, token, port=0)
