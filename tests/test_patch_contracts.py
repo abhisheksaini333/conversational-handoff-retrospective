@@ -140,3 +140,9 @@ class PatchContracts(unittest.TestCase):
         code, body, _ = self.http("/tickets", method="GET")
         self.assertEqual(code, 503)
         self.assertNotIn("private", str(body))
+
+    def test_readiness_detects_missing_schema(self):
+        self.assertEqual(self.http("/ready", method="GET")[0], 200)
+        with sqlite3.connect(self.path) as db: db.execute("DROP TABLE conversations")
+        self.assertEqual(self.http("/ready", method="GET")[0], 503)
+        self.assertEqual(self.http("/health", method="GET")[0], 200)

@@ -86,6 +86,15 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
         def do_GET(self):
             if self.path=='/health':
                 self.reply(200,{'status':'ok','mode':'synthetic-demo'})
+            elif self.path=='/ready':
+                try:
+                    with core._transaction(readonly=True) as db:
+                        db.execute('SELECT id FROM conversations LIMIT 1').fetchone()
+                        db.execute('SELECT id FROM tickets LIMIT 1').fetchone()
+                        db.execute('SELECT event FROM receipts LIMIT 1').fetchone()
+                    self.reply(200, {'status':'ready'})
+                except sqlite3.Error:
+                    self.reply(503, {'status':'unavailable'})
             elif self.authorized():
                 if self.path=='/tickets':
                     try:
