@@ -146,3 +146,8 @@ class PatchContracts(unittest.TestCase):
         with sqlite3.connect(self.path) as db: db.execute("DROP TABLE conversations")
         self.assertEqual(self.http("/ready", method="GET")[0], 503)
         self.assertEqual(self.http("/health", method="GET")[0], 200)
+
+    def test_temporary_storage_failure_includes_retry_after(self):
+        def unavailable(): raise sqlite3.OperationalError("busy")
+        self.core.tickets = unavailable
+        self.assertEqual(self.http("/tickets", method="GET")[2]["Retry-After"], "1")

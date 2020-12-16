@@ -67,6 +67,8 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
             self.send_header('Cache-Control','no-store')
             self.send_header('X-Content-Type-Options','nosniff')
             self.send_header('Content-Security-Policy',"default-src 'none'; frame-ancestors 'none'")
+            if code == 503:
+                self.send_header('Retry-After', '1')
             for name, value in (extra_headers or {}).items():
                 self.send_header(name, value)
             self.end_headers();self.wfile.write(raw)
