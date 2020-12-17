@@ -151,3 +151,9 @@ class PatchContracts(unittest.TestCase):
         def unavailable(): raise sqlite3.OperationalError("busy")
         self.core.tickets = unavailable
         self.assertEqual(self.http("/tickets", method="GET")[2]["Retry-After"], "1")
+
+    def test_rasa_url_rejects_credentials_and_non_http_schemes(self):
+        from handoff.server import make_server
+        for url in ["file:///tmp/a", "http://user:pass@localhost", "http://localhost?token=x", "http://localhost/#frag", "relative"]:
+            with self.subTest(url=url), self.assertRaises(ValueError):
+                make_server(self.core, "local-test-credential", port=0, rasa_url=url)

@@ -40,6 +40,10 @@ def resume_events(result):
 def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_token=None):
     if not isinstance(token, str) or len(token)<16 or any(c.isspace() or ord(c)<33 or ord(c)>126 for c in token):
         raise ValueError('HANDOFF_TOKEN must contain at least 16 characters')
+    if rasa_url is not None:
+        parsed = urllib.parse.urlsplit(rasa_url)
+        if parsed.scheme not in ('http', 'https') or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
+            raise ValueError('RASA_URL must be an HTTP base URL without credentials, query or fragment')
     desk=SimulatedDesk(core.database)
 
     def resume(result):
