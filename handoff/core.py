@@ -4,6 +4,7 @@ import hashlib
 import json
 import math
 import sqlite3
+import time
 import uuid
 import unicodedata
 from contextlib import contextmanager
@@ -20,11 +21,12 @@ def identifier(value, name):
 
 
 class Coordinator:
-    def __init__(self, database, threshold=0.6, busy_timeout=10):
+    def __init__(self, database, threshold=0.6, busy_timeout=10, clock=None):
         if isinstance(threshold, bool) or not isinstance(threshold, (int, float)) or not 0 <= threshold <= 1:
             raise ValueError("threshold must be between zero and one")
         if str(database) in ("", ":memory:"):
             raise ValueError("database must be a persistent file path")
+        self.clock = clock or time.time
         self.database = database
         self.threshold = threshold
         if isinstance(busy_timeout, bool) or not isinstance(busy_timeout, (int, float)) or not math.isfinite(busy_timeout) or not 0 < busy_timeout <= 60:
@@ -117,7 +119,7 @@ class Coordinator:
             state["context"] = (state["context"] + [{"role": "user", "text": text}])[-20:]
             if state["state"] == "bot" and (intent in ("request_human", "nlu_fallback") or confidence < self.threshold):
                 state.update(state="pending", ticket_id=str(uuid.uuid4()), form=active_form)
-                ticket = {"id": state["ticket_id"], "conversation": conversation, "state": "pending", "form": active_form, "context": state["context"], "reason": "explicit" if intent == "request_human" else "low_confidence", "delivery_attempts": 0}
+                ticket = {"id": state["ticket_id"], "conversation": conversation, "state": "pending", "form": active_form, "context": state["context"], "reason": "explicit" if intent == "request_human" else "low_confidence", "delivery_attempts": 0, "created_at": self._now()}
                 self._put(db, "tickets", ticket["id"], ticket)
             elif state["state"] in ("pending", "human"):
                 ticket = self._get(db, "tickets", state["ticket_id"])
@@ -148,6 +150,7 @@ class Coordinator:
             state = self._get(db, "conversations", ticket["conversation"])
             if latest["state"] == "pending" and state["ticket_id"] == ticket_id:
                 latest["state"] = state["state"] = "human"
+                latest["accepted_at"] = self._now()
                 self._put(db, "tickets", ticket_id, latest)
                 self._put(db, "conversations", state["id"], state)
             return state
@@ -170,8 +173,15 @@ class Coordinator:
             if before_resume is not None:
                 before_resume(copy.deepcopy(result))
             ticket["state"] = "completed"
+            ticket["completed_at"] = self._now()
             state.update(state="bot", ticket_id=None, form=ticket["form"])
             self._put(db, "tickets", ticket_id, ticket)
             self._put(db, "conversations", state["id"], state)
             self._receipt(db, "complete:"+ticket_id, event_id, ticket_id, result)
             return result
+
+    def _now(self):
+        value = self.clock()
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
+            raise ValueError("clock must return finite nonnegative seconds")
+        return float(value)

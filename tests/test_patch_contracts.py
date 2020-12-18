@@ -157,3 +157,15 @@ class PatchContracts(unittest.TestCase):
         for url in ["file:///tmp/a", "http://user:pass@localhost", "http://localhost?token=x", "http://localhost/#frag", "relative"]:
             with self.subTest(url=url), self.assertRaises(ValueError):
                 make_server(self.core, "local-test-credential", port=0, rasa_url=url)
+
+    def test_lifecycle_clock_is_persisted(self):
+        clock = [100.0]
+        core = Coordinator(self.path, clock=lambda: clock[0])
+        ticket = core.message("time", "e", "help", "request_human", .9)["ticket_id"]
+        self.assertEqual(core.ticket(ticket)["created_at"], 100)
+        clock[0] = 105
+        core.dispatch(ticket, Desk())
+        self.assertEqual(core.ticket(ticket)["accepted_at"], 105)
+        clock[0] = 110
+        core.complete(ticket, "done")
+        self.assertEqual(core.ticket(ticket)["completed_at"], 110)
