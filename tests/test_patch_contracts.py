@@ -169,3 +169,11 @@ class PatchContracts(unittest.TestCase):
         clock[0] = 110
         core.complete(ticket, "done")
         self.assertEqual(core.ticket(ticket)["completed_at"], 110)
+
+    def test_ticket_pages_have_no_overlap(self):
+        ids = [self.request("c" + str(i))["ticket_id"] for i in range(3)]
+        first = self.core.ticket_page(limit=2)
+        second = self.core.ticket_page(limit=2, after=first["next_cursor"])
+        self.assertEqual([t["id"] for t in first["items"] + second["items"]], ids)
+        self.assertIsNone(second["next_cursor"])
+        with self.assertRaises(ValueError): self.core.ticket_page(limit=True)

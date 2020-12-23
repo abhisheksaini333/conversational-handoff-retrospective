@@ -185,3 +185,11 @@ class Coordinator:
         if isinstance(value, bool) or not isinstance(value, (int, float)) or not math.isfinite(value) or value < 0:
             raise ValueError("clock must return finite nonnegative seconds")
         return float(value)
+
+    def ticket_page(self, limit=50, after=0):
+        if type(limit) is not int or not 1 <= limit <= 100 or type(after) is not int or after < 0:
+            raise ValueError("limit must be 1..100 and cursor nonnegative")
+        with self._transaction(readonly=True) as db:
+            rows = list(db.execute("SELECT rowid,data FROM tickets WHERE rowid>? ORDER BY rowid LIMIT ?", (after, limit+1)))
+        return {"items": [json.loads(row[1]) for row in rows[:limit]],
+                "next_cursor": rows[limit-1][0] if len(rows)>limit else None}
