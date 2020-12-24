@@ -177,3 +177,11 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual([t["id"] for t in first["items"] + second["items"]], ids)
         self.assertIsNone(second["next_cursor"])
         with self.assertRaises(ValueError): self.core.ticket_page(limit=True)
+
+    def test_ticket_page_filters_do_not_skip_matching_rows(self):
+        self.request("first")
+        selected = self.request("second")["ticket_id"]
+        self.core.dispatch(selected, Desk())
+        result = self.core.ticket_page(state="human", conversation="second", reason="explicit", limit=1)
+        self.assertEqual([t["id"] for t in result["items"]], [selected])
+        with self.assertRaises(ValueError): self.core.ticket_page(state="invalid")
