@@ -203,3 +203,9 @@ class Coordinator:
                         break
         return {"items": [json.loads(row[1]) for row in rows[:limit]],
                 "next_cursor": rows[limit-1][0] if len(rows)>limit else None}
+
+    def ticket_summary(self, ticket_id):
+        ticket = self.ticket(ticket_id)
+        result = {key: ticket.get(key) for key in ("id", "conversation", "state", "reason", "delivery_attempts", "created_at", "accepted_at", "completed_at")}
+        result["context_messages"] = len(ticket.get("context", []))
+        return result

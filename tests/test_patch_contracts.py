@@ -185,3 +185,10 @@ class PatchContracts(unittest.TestCase):
         result = self.core.ticket_page(state="human", conversation="second", reason="explicit", limit=1)
         self.assertEqual([t["id"] for t in result["items"]], [selected])
         with self.assertRaises(ValueError): self.core.ticket_page(state="invalid")
+
+    def test_ticket_summary_omits_transcript_text(self):
+        ticket = self.request()["ticket_id"]
+        result = self.core.ticket_summary(ticket)
+        self.assertEqual(result["context_messages"], 1)
+        self.assertNotIn("context", result)
+        self.assertEqual(result["state"], "pending")
