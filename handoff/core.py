@@ -209,3 +209,8 @@ class Coordinator:
         result = {key: ticket.get(key) for key in ("id", "conversation", "state", "reason", "delivery_attempts", "created_at", "accepted_at", "completed_at")}
         result["context_messages"] = len(ticket.get("context", []))
         return result
+
+    def snapshot_counts(self):
+        with self._transaction(readonly=True) as db:
+            return {table: db.execute("SELECT COUNT(*) FROM " + table).fetchone()[0]
+                    for table in ("conversations", "tickets", "receipts")}

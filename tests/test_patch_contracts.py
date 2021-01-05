@@ -192,3 +192,8 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(result["context_messages"], 1)
         self.assertNotIn("context", result)
         self.assertEqual(result["state"], "pending")
+
+    def test_snapshot_counts_durable_records(self):
+        self.accepted()
+        counts = self.core.snapshot_counts()
+        self.assertEqual(counts, {"conversations": 1, "tickets": 1, "receipts": 1})
