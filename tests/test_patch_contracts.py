@@ -197,3 +197,13 @@ class PatchContracts(unittest.TestCase):
         self.accepted()
         counts = self.core.snapshot_counts()
         self.assertEqual(counts, {"conversations": 1, "tickets": 1, "receipts": 1})
+
+    def test_queue_metrics_separate_active_states(self):
+        self.core = Coordinator(self.path, clock=lambda: 100)
+        self.request("pending")
+        self.accepted(conversation="human")
+        self.core.clock = lambda: 125
+        metrics = self.core.queue_metrics()
+        self.assertEqual(metrics["pending"], 1)
+        self.assertEqual(metrics["human"], 1)
+        self.assertEqual(metrics["oldest_pending_seconds"], 25)

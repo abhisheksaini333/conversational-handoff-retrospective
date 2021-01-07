@@ -214,3 +214,12 @@ class Coordinator:
         with self._transaction(readonly=True) as db:
             return {table: db.execute("SELECT COUNT(*) FROM " + table).fetchone()[0]
                     for table in ("conversations", "tickets", "receipts")}
+
+    def queue_metrics(self):
+        now = self._now()
+        tickets = self.tickets()
+        pending = [t for t in tickets if t["state"] == "pending"]
+        ages = [max(0, now-t["created_at"]) for t in pending if "created_at" in t]
+        return {"pending": len(pending), "human": sum(t["state"] == "human" for t in tickets),
+                "oldest_pending_seconds": max(ages) if ages else None,
+                "untimed_pending": sum("created_at" not in t for t in pending)}
