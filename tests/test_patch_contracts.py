@@ -207,3 +207,11 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(metrics["pending"], 1)
         self.assertEqual(metrics["human"], 1)
         self.assertEqual(metrics["oldest_pending_seconds"], 25)
+
+    def test_retry_metrics_count_failed_attempts(self):
+        class FailedDesk:
+            def accept(self, _): raise ConnectionError("offline")
+        ticket = self.request()["ticket_id"]
+        with self.assertRaises(ConnectionError): self.core.dispatch(ticket, FailedDesk())
+        self.core.dispatch(ticket, Desk())
+        self.assertEqual(self.core.retry_metrics(), {"attempts": 2, "retried_tickets": 1, "maximum_attempts": 2})

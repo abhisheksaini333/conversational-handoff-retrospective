@@ -223,3 +223,8 @@ class Coordinator:
         return {"pending": len(pending), "human": sum(t["state"] == "human" for t in tickets),
                 "oldest_pending_seconds": max(ages) if ages else None,
                 "untimed_pending": sum("created_at" not in t for t in pending)}
+
+    def retry_metrics(self):
+        attempts = [t.get("delivery_attempts", 0) for t in self.tickets()]
+        return {"attempts": sum(attempts), "retried_tickets": sum(a > 1 for a in attempts),
+                "maximum_attempts": max(attempts, default=0)}
