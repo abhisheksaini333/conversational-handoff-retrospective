@@ -228,3 +228,11 @@ class Coordinator:
         attempts = [t.get("delivery_attempts", 0) for t in self.tickets()]
         return {"attempts": sum(attempts), "retried_tickets": sum(a > 1 for a in attempts),
                 "maximum_attempts": max(attempts, default=0)}
+
+    def resolution_metrics(self):
+        samples = [t for t in self.tickets() if t["state"] == "completed" and all(k in t for k in ("created_at", "accepted_at", "completed_at"))]
+        if not samples:
+            return {"samples": 0, "mean_wait_seconds": None, "mean_handling_seconds": None}
+        return {"samples": len(samples),
+                "mean_wait_seconds": sum(max(0, t["accepted_at"]-t["created_at"]) for t in samples)/len(samples),
+                "mean_handling_seconds": sum(max(0, t["completed_at"]-t["accepted_at"]) for t in samples)/len(samples)}

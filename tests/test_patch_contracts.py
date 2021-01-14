@@ -215,3 +215,12 @@ class PatchContracts(unittest.TestCase):
         with self.assertRaises(ConnectionError): self.core.dispatch(ticket, FailedDesk())
         self.core.dispatch(ticket, Desk())
         self.assertEqual(self.core.retry_metrics(), {"attempts": 2, "retried_tickets": 1, "maximum_attempts": 2})
+
+    def test_resolution_metrics_have_explicit_sample_counts(self):
+        clock = [10]
+        self.core = Coordinator(self.path, clock=lambda: clock[0])
+        ticket = self.request()["ticket_id"]
+        clock[0] = 15; self.core.dispatch(ticket, Desk())
+        clock[0] = 23; self.core.complete(ticket, "done")
+        metrics = self.core.resolution_metrics()
+        self.assertEqual(metrics, {"samples": 1, "mean_wait_seconds": 5.0, "mean_handling_seconds": 8.0})
