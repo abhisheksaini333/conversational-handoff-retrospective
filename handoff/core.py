@@ -236,3 +236,10 @@ class Coordinator:
         return {"samples": len(samples),
                 "mean_wait_seconds": sum(max(0, t["accepted_at"]-t["created_at"]) for t in samples)/len(samples),
                 "mean_handling_seconds": sum(max(0, t["completed_at"]-t["accepted_at"]) for t in samples)/len(samples)}
+
+    def routing_metrics(self):
+        result = {"explicit": 0, "low_confidence": 0, "unknown": 0}
+        for ticket in self.tickets():
+            reason = ticket.get("reason")
+            result[reason if reason in result else "unknown"] += 1
+        return result
