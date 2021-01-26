@@ -243,3 +243,8 @@ class Coordinator:
             reason = ticket.get("reason")
             result[reason if reason in result else "unknown"] += 1
         return result
+
+    def integrity(self):
+        with self._transaction(readonly=True) as db:
+            checks = [row[0] for row in db.execute("PRAGMA quick_check")]
+        return {"ok": checks == ["ok"], "checks": checks}

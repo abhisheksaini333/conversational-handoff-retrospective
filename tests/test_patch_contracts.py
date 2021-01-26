@@ -229,3 +229,7 @@ class PatchContracts(unittest.TestCase):
         self.request()
         self.core.message("low", "e", "hi", "greet", .1)
         self.assertEqual(self.core.routing_metrics(), {"explicit": 1, "low_confidence": 1, "unknown": 0})
+
+    def test_integrity_report_checks_database_pages(self):
+        self.request()
+        self.assertEqual(self.core.integrity(), {"ok": True, "checks": ["ok"]})
