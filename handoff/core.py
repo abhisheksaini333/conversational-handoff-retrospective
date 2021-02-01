@@ -248,3 +248,21 @@ class Coordinator:
         with self._transaction(readonly=True) as db:
             checks = [row[0] for row in db.execute("PRAGMA quick_check")]
         return {"ok": checks == ["ok"], "checks": checks}
+
+    def backup(self, destination):
+        import os
+        from pathlib import Path
+        path = Path(destination)
+        # Reserve the destination exclusively, including against symlink replacement.
+        descriptor = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
+        os.close(descriptor)
+        try:
+            with sqlite3.connect(self.database, timeout=self.busy_timeout) as source:
+                with sqlite3.connect(str(path)) as target:
+                    source.backup(target)
+                    if target.execute("PRAGMA integrity_check").fetchall() != [("ok",)]:
+                        raise sqlite3.DatabaseError("backup integrity verification failed")
+        except BaseException:
+            path.unlink(missing_ok=True)
+            raise
+        return {"path": str(path), "verified": True}

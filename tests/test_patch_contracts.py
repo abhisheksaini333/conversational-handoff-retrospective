@@ -233,3 +233,12 @@ class PatchContracts(unittest.TestCase):
     def test_integrity_report_checks_database_pages(self):
         self.request()
         self.assertEqual(self.core.integrity(), {"ok": True, "checks": ["ok"]})
+
+    def test_online_backup_restores_ownership_and_refuses_overwrite(self):
+        ticket = self.accepted()
+        path = Path(self.temp.name) / "backup.sqlite3"
+        self.core.backup(path)
+        restored = Coordinator(str(path))
+        self.assertEqual(restored.ticket(ticket)["state"], "human")
+        with self.assertRaises(FileExistsError): self.core.backup(path)
+        self.assertEqual(restored.integrity()["ok"], True)
