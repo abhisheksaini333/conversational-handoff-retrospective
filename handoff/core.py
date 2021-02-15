@@ -266,3 +266,13 @@ class Coordinator:
             path.unlink(missing_ok=True)
             raise
         return {"path": str(path), "verified": True}
+
+    def export_conversation(self, conversation):
+        identifier(conversation, "conversation")
+        with self._transaction(readonly=True) as db:
+            state = self._get(db, "conversations", conversation)
+            if state is None:
+                raise KeyError("conversation not found")
+            tickets = [json.loads(row[0]) for row in db.execute("SELECT data FROM tickets ORDER BY rowid")]
+            return {"version": 1, "conversation": state,
+                    "tickets": [t for t in tickets if t["conversation"] == conversation]}

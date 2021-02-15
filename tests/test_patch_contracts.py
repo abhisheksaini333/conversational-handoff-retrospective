@@ -242,3 +242,12 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(restored.ticket(ticket)["state"], "human")
         with self.assertRaises(FileExistsError): self.core.backup(path)
         self.assertEqual(restored.integrity()["ok"], True)
+
+    def test_conversation_export_is_complete_and_missing_is_explicit(self):
+        ticket = self.accepted()
+        exported = self.core.export_conversation("c1")
+        self.assertEqual(exported["conversation"]["state"], "human")
+        self.assertEqual(exported["tickets"][0]["id"], ticket)
+        exported["tickets"].clear()
+        self.assertEqual(len(self.core.tickets()), 1)
+        with self.assertRaises(KeyError): self.core.export_conversation("missing")
