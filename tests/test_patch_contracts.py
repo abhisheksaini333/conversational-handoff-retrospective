@@ -251,3 +251,11 @@ class PatchContracts(unittest.TestCase):
         exported["tickets"].clear()
         self.assertEqual(len(self.core.tickets()), 1)
         with self.assertRaises(KeyError): self.core.export_conversation("missing")
+
+    def test_export_digest_detects_modified_content(self):
+        import hashlib
+        from handoff.core import canonical
+        self.request()
+        result = self.core.export_bundle("c1")
+        self.assertEqual(result["sha256"], hashlib.sha256(canonical(result["data"]).encode()).hexdigest())
+        self.assertEqual(result["algorithm"], "sha256")

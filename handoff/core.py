@@ -276,3 +276,7 @@ class Coordinator:
             tickets = [json.loads(row[0]) for row in db.execute("SELECT data FROM tickets ORDER BY rowid")]
             return {"version": 1, "conversation": state,
                     "tickets": [t for t in tickets if t["conversation"] == conversation]}
+
+    def export_bundle(self, conversation):
+        data = self.export_conversation(conversation)
+        return {"algorithm": "sha256", "sha256": hashlib.sha256(canonical(data).encode()).hexdigest(), "data": data}
