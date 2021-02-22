@@ -280,3 +280,26 @@ class Coordinator:
     def export_bundle(self, conversation):
         data = self.export_conversation(conversation)
         return {"algorithm": "sha256", "sha256": hashlib.sha256(canonical(data).encode()).hexdigest(), "data": data}
+
+    def cancel(self, ticket_id, event_id, reason):
+        identifier(ticket_id, "ticket_id"); identifier(event_id, "event_id")
+        if not isinstance(reason, str) or not reason.strip() or len(reason) > 500:
+            raise ValueError("cancellation reason must contain 1..500 characters")
+        fingerprint = hashlib.sha256(canonical(reason).encode()).hexdigest()
+        with self._transaction() as db:
+            prior = self._replay(db, "cancel:"+ticket_id, event_id, fingerprint)
+            if prior is not None:
+                return prior
+            ticket = self._get(db, "tickets", ticket_id)
+            if ticket is None:
+                raise KeyError("ticket not found")
+            state = self._get(db, "conversations", ticket["conversation"])
+            if ticket["state"] != "pending" or state["ticket_id"] != ticket_id:
+                raise ValueError("only the active pending ticket may be cancelled")
+            ticket.update(state="cancelled", cancellation_reason=reason, cancelled_at=self._now())
+            state.update(state="bot", ticket_id=None)
+            result = {"conversation": state["id"], "state": "bot", "ticket_id": ticket_id}
+            self._put(db, "tickets", ticket_id, ticket)
+            self._put(db, "conversations", state["id"], state)
+            self._receipt(db, "cancel:"+ticket_id, event_id, fingerprint, result)
+            return result

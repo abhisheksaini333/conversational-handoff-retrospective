@@ -259,3 +259,13 @@ class PatchContracts(unittest.TestCase):
         result = self.core.export_bundle("c1")
         self.assertEqual(result["sha256"], hashlib.sha256(canonical(result["data"]).encode()).hexdigest())
         self.assertEqual(result["algorithm"], "sha256")
+
+    def test_pending_cancellation_is_replay_safe(self):
+        ticket = self.request()["ticket_id"]
+        first = self.core.cancel(ticket, "cancel-1", "user withdrew")
+        self.assertEqual(first["state"], "bot")
+        self.assertEqual(self.core.ticket(ticket)["state"], "cancelled")
+        self.assertEqual(self.core.cancel(ticket, "cancel-1", "user withdrew"), first)
+        with self.assertRaises(ValueError): self.core.cancel(ticket, "cancel-1", "different")
+        other = self.accepted(conversation="other")
+        with self.assertRaises(ValueError): self.core.cancel(other, "cancel-2", "user withdrew")
