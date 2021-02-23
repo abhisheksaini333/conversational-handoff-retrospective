@@ -269,3 +269,12 @@ class PatchContracts(unittest.TestCase):
         with self.assertRaises(ValueError): self.core.cancel(ticket, "cancel-1", "different")
         other = self.accepted(conversation="other")
         with self.assertRaises(ValueError): self.core.cancel(other, "cancel-2", "user withdrew")
+
+    def test_ticket_writes_leave_redacted_atomic_audit_entries(self):
+        ticket = self.accepted()
+        self.core.complete(ticket, "done")
+        with sqlite3.connect(self.path) as db:
+            rows = db.execute("SELECT kind,payload FROM audit ORDER BY sequence").fetchall()
+        self.assertEqual([r[0] for r in rows], ["created", "delivery_attempt", "state:human", "state:completed"])
+        self.assertNotIn("help", str(rows))
+        self.assertNotIn("context", str(rows))

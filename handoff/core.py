@@ -35,6 +35,7 @@ class Coordinator:
         with self._transaction() as db:
             db.execute("CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, data TEXT NOT NULL)")
             db.execute("CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, data TEXT NOT NULL)")
+            db.execute("CREATE TABLE IF NOT EXISTS audit (sequence INTEGER PRIMARY KEY AUTOINCREMENT, ticket TEXT NOT NULL, conversation TEXT NOT NULL, kind TEXT NOT NULL, payload TEXT NOT NULL)")
             db.execute("CREATE TABLE IF NOT EXISTS receipts (scope TEXT, event TEXT, fingerprint TEXT NOT NULL, result TEXT NOT NULL, PRIMARY KEY(scope,event))")
 
     @contextmanager
@@ -58,7 +59,12 @@ class Coordinator:
 
     @staticmethod
     def _put(db, table, key, data):
+        previous = Coordinator._get(db, table, key) if table == "tickets" else None
         db.execute("INSERT INTO " + table + "(id,data) VALUES(?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data", (key, canonical(data)))
+        if table == "tickets" and previous != data:
+            kind = "created" if previous is None else "state:"+data["state"] if previous["state"] != data["state"] else "delivery_attempt" if previous.get("delivery_attempts") != data.get("delivery_attempts") else "updated"
+            payload = {"state": data["state"], "delivery_attempts": data.get("delivery_attempts", 0)}
+            db.execute("INSERT INTO audit(ticket,conversation,kind,payload) VALUES(?,?,?,?)", (key, data["conversation"], kind, canonical(payload)))
 
     @staticmethod
     def _replay(db, scope, event, fingerprint):
