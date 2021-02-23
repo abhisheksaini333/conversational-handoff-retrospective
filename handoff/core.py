@@ -309,3 +309,13 @@ class Coordinator:
             self._put(db, "conversations", state["id"], state)
             self._receipt(db, "cancel:"+ticket_id, event_id, fingerprint, result)
             return result
+
+    def audit_page(self, limit=50, after=0, ticket_id=None):
+        if type(limit) is not int or not 1 <= limit <= 100 or type(after) is not int or after < 0:
+            raise ValueError("invalid audit cursor or limit")
+        if ticket_id is not None:
+            identifier(ticket_id, "ticket_id")
+        with self._transaction(readonly=True) as db:
+            rows = list(db.execute("SELECT sequence,ticket,conversation,kind,payload FROM audit WHERE sequence>? AND (? IS NULL OR ticket=?) ORDER BY sequence LIMIT ?", (after, ticket_id, ticket_id, limit+1)))
+        return {"items": [{"sequence": r[0], "ticket_id": r[1], "conversation": r[2], "kind": r[3], "payload": json.loads(r[4])} for r in rows[:limit]],
+                "next_cursor": rows[limit-1][0] if len(rows)>limit else None}

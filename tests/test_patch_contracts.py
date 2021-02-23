@@ -278,3 +278,11 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual([r[0] for r in rows], ["created", "delivery_attempt", "state:human", "state:completed"])
         self.assertNotIn("help", str(rows))
         self.assertNotIn("context", str(rows))
+
+    def test_audit_cursor_is_stable_and_ticket_scoped(self):
+        first = self.accepted()
+        self.request("other")
+        page = self.core.audit_page(ticket_id=first, limit=1)
+        next_page = self.core.audit_page(ticket_id=first, after=page["next_cursor"])
+        self.assertEqual(len(page["items"] + next_page["items"]), 3)
+        self.assertTrue(all(r["ticket_id"] == first for r in next_page["items"]))
