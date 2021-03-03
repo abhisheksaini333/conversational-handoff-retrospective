@@ -319,3 +319,7 @@ class Coordinator:
             rows = list(db.execute("SELECT sequence,ticket,conversation,kind,payload FROM audit WHERE sequence>? AND (? IS NULL OR ticket=?) ORDER BY sequence LIMIT ?", (after, ticket_id, ticket_id, limit+1)))
         return {"items": [{"sequence": r[0], "ticket_id": r[1], "conversation": r[2], "kind": r[3], "payload": json.loads(r[4])} for r in rows[:limit]],
                 "next_cursor": rows[limit-1][0] if len(rows)>limit else None}
+
+    def audit_summary(self):
+        with self._transaction(readonly=True) as db:
+            return dict(db.execute("SELECT kind,COUNT(*) FROM audit GROUP BY kind ORDER BY kind"))

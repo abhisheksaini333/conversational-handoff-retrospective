@@ -286,3 +286,7 @@ class PatchContracts(unittest.TestCase):
         next_page = self.core.audit_page(ticket_id=first, after=page["next_cursor"])
         self.assertEqual(len(page["items"] + next_page["items"]), 3)
         self.assertTrue(all(r["ticket_id"] == first for r in next_page["items"]))
+
+    def test_audit_summary_counts_state_changes(self):
+        self.accepted()
+        self.assertEqual(self.core.audit_summary(), {"created": 1, "delivery_attempt": 1, "state:human": 1})
