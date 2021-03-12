@@ -290,3 +290,12 @@ class PatchContracts(unittest.TestCase):
     def test_audit_summary_counts_state_changes(self):
         self.accepted()
         self.assertEqual(self.core.audit_summary(), {"created": 1, "delivery_attempt": 1, "state:human": 1})
+
+    def test_priority_updates_are_revision_checked_and_replayable(self):
+        ticket = self.request()["ticket_id"]
+        result = self.core.set_priority(ticket, "p1", "urgent", expected_revision=0)
+        self.assertEqual(result["priority"], "urgent")
+        self.assertEqual(result["revision"], 1)
+        self.assertEqual(self.core.set_priority(ticket, "p1", "urgent", expected_revision=0), result)
+        with self.assertRaises(ValueError): self.core.set_priority(ticket, "p2", "low", expected_revision=0)
+        with self.assertRaises(ValueError): self.core.set_priority(ticket, "p2", "invalid")

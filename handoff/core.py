@@ -323,3 +323,32 @@ class Coordinator:
     def audit_summary(self):
         with self._transaction(readonly=True) as db:
             return dict(db.execute("SELECT kind,COUNT(*) FROM audit GROUP BY kind ORDER BY kind"))
+
+    def _metadata(self, ticket_id, event_id, operation, payload, edit, expected_revision=None):
+        identifier(ticket_id, "ticket_id"); identifier(event_id, "event_id")
+        if expected_revision is not None and (type(expected_revision) is not int or expected_revision < 0):
+            raise ValueError("revision must be a nonnegative integer")
+        fingerprint = hashlib.sha256(canonical([operation, payload, expected_revision]).encode()).hexdigest()
+        with self._transaction() as db:
+            prior = self._replay(db, "metadata:"+ticket_id, event_id, fingerprint)
+            if prior is not None:
+                return prior
+            ticket = self._get(db, "tickets", ticket_id)
+            if ticket is None:
+                raise KeyError("ticket not found")
+            if ticket["state"] not in ("pending", "human"):
+                raise ValueError("ticket is closed")
+            revision = ticket.get("revision", 0)
+            if expected_revision is not None and expected_revision != revision:
+                raise ValueError("ticket revision changed")
+            edit(ticket)
+            ticket["revision"] = revision + 1
+            self._put(db, "tickets", ticket_id, ticket)
+            self._receipt(db, "metadata:"+ticket_id, event_id, fingerprint, ticket)
+            return ticket
+
+    def set_priority(self, ticket_id, event_id, priority, expected_revision=None):
+        if priority not in ("low", "normal", "high", "urgent"):
+            raise ValueError("invalid priority")
+        return self._metadata(ticket_id, event_id, "priority", priority,
+                              lambda t: t.update(priority=priority), expected_revision)
