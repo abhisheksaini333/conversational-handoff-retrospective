@@ -352,3 +352,10 @@ class Coordinator:
             raise ValueError("invalid priority")
         return self._metadata(ticket_id, event_id, "priority", priority,
                               lambda t: t.update(priority=priority), expected_revision)
+
+    def set_tags(self, ticket_id, event_id, tags, expected_revision=None):
+        if not isinstance(tags, list) or len(tags)>10 or any(not isinstance(t, str) or not t.strip() or len(t)>32 for t in tags):
+            raise ValueError("tags must contain at most ten nonempty strings of 32 characters")
+        normalized = sorted(set(identifier(t.strip().lower(), "tag") for t in tags))
+        return self._metadata(ticket_id, event_id, "tags", normalized,
+                              lambda t: t.update(tags=normalized), expected_revision)

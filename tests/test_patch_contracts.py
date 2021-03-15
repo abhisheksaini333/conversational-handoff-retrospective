@@ -299,3 +299,9 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(self.core.set_priority(ticket, "p1", "urgent", expected_revision=0), result)
         with self.assertRaises(ValueError): self.core.set_priority(ticket, "p2", "low", expected_revision=0)
         with self.assertRaises(ValueError): self.core.set_priority(ticket, "p2", "invalid")
+
+    def test_tags_are_deduplicated_and_bounded(self):
+        ticket = self.request()["ticket_id"]
+        result = self.core.set_tags(ticket, "tags", ["Billing", "billing", " urgent "])
+        self.assertEqual(result["tags"], ["billing", "urgent"])
+        with self.assertRaises(ValueError): self.core.set_tags(ticket, "bad", ["x" * 33])
