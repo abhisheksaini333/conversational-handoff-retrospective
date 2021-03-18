@@ -305,3 +305,11 @@ class PatchContracts(unittest.TestCase):
         result = self.core.set_tags(ticket, "tags", ["Billing", "billing", " urgent "])
         self.assertEqual(result["tags"], ["billing", "urgent"])
         with self.assertRaises(ValueError): self.core.set_tags(ticket, "bad", ["x" * 33])
+
+    def test_note_retry_does_not_append_twice(self):
+        ticket = self.request()["ticket_id"]
+        result = self.core.add_note(ticket, "note1", "agent-a", "Checked the order")
+        self.core.add_note(ticket, "note1", "agent-a", "Checked the order")
+        self.assertEqual(len(self.core.ticket(ticket)["notes"]), 1)
+        self.assertEqual(result["notes"][0]["actor"], "agent-a")
+        with self.assertRaises(ValueError): self.core.add_note(ticket, "note1", "agent-b", "Changed")

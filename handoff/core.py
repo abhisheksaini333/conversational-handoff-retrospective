@@ -359,3 +359,14 @@ class Coordinator:
         normalized = sorted(set(identifier(t.strip().lower(), "tag") for t in tags))
         return self._metadata(ticket_id, event_id, "tags", normalized,
                               lambda t: t.update(tags=normalized), expected_revision)
+
+    def add_note(self, ticket_id, event_id, actor, text, expected_revision=None):
+        identifier(actor, "actor")
+        if not isinstance(text, str) or not text.strip() or len(text)>2000:
+            raise ValueError("note must contain 1..2000 characters")
+        def edit(ticket):
+            notes = ticket.setdefault("notes", [])
+            if len(notes)>=100:
+                raise ValueError("ticket note limit reached")
+            notes.append({"id": event_id, "actor": actor, "text": text, "created_at": self._now()})
+        return self._metadata(ticket_id, event_id, "note", [actor, text], edit, expected_revision)
