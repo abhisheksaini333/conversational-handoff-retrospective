@@ -313,3 +313,10 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(len(self.core.ticket(ticket)["notes"]), 1)
         self.assertEqual(result["notes"][0]["actor"], "agent-a")
         with self.assertRaises(ValueError): self.core.add_note(ticket, "note1", "agent-b", "Changed")
+
+    def test_claim_requires_acknowledged_unassigned_ticket(self):
+        pending = self.request()["ticket_id"]
+        with self.assertRaises(ValueError): self.core.claim(pending, "a", "operator")
+        self.core.dispatch(pending, Desk())
+        self.assertEqual(self.core.claim(pending, "a", "operator")["assignee"], "operator")
+        with self.assertRaises(ValueError): self.core.claim(pending, "b", "another")

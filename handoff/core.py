@@ -370,3 +370,11 @@ class Coordinator:
                 raise ValueError("ticket note limit reached")
             notes.append({"id": event_id, "actor": actor, "text": text, "created_at": self._now()})
         return self._metadata(ticket_id, event_id, "note", [actor, text], edit, expected_revision)
+
+    def claim(self, ticket_id, event_id, actor, expected_revision=None):
+        identifier(actor, "actor")
+        def edit(ticket):
+            if ticket["state"] != "human" or ticket.get("assignee") not in (None, actor):
+                raise ValueError("ticket must be acknowledged and unclaimed")
+            ticket["assignee"] = actor
+        return self._metadata(ticket_id, event_id, "claim", actor, edit, expected_revision)
