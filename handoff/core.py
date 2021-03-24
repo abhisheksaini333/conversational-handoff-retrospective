@@ -378,3 +378,11 @@ class Coordinator:
                 raise ValueError("ticket must be acknowledged and unclaimed")
             ticket["assignee"] = actor
         return self._metadata(ticket_id, event_id, "claim", actor, edit, expected_revision)
+
+    def release(self, ticket_id, event_id, actor, expected_revision=None):
+        identifier(actor, "actor")
+        def edit(ticket):
+            if ticket["state"] != "human" or ticket.get("assignee") != actor:
+                raise ValueError("only the assigned operator may release")
+            ticket["assignee"] = None
+        return self._metadata(ticket_id, event_id, "release", actor, edit, expected_revision)

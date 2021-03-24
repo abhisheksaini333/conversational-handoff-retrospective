@@ -320,3 +320,10 @@ class PatchContracts(unittest.TestCase):
         self.core.dispatch(pending, Desk())
         self.assertEqual(self.core.claim(pending, "a", "operator")["assignee"], "operator")
         with self.assertRaises(ValueError): self.core.claim(pending, "b", "another")
+
+    def test_assignment_release_checks_current_actor(self):
+        ticket = self.accepted()
+        self.core.claim(ticket, "claim", "one")
+        with self.assertRaises(ValueError): self.core.release(ticket, "release", "two")
+        self.assertIsNone(self.core.release(ticket, "release", "one")["assignee"])
+        self.assertEqual(self.core.conversation("c1")["state"], "human")
