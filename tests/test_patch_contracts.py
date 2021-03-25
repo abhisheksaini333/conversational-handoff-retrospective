@@ -327,3 +327,11 @@ class PatchContracts(unittest.TestCase):
         with self.assertRaises(ValueError): self.core.release(ticket, "release", "two")
         self.assertIsNone(self.core.release(ticket, "release", "one")["assignee"])
         self.assertEqual(self.core.conversation("c1")["state"], "human")
+
+    def test_transfer_preserves_human_ownership(self):
+        ticket = self.accepted()
+        self.core.claim(ticket, "claim", "one")
+        result = self.core.transfer(ticket, "transfer", "one", "two")
+        self.assertEqual(result["assignee"], "two")
+        self.assertEqual(self.core.conversation("c1")["state"], "human")
+        with self.assertRaises(ValueError): self.core.transfer(ticket, "again", "one", "three")

@@ -386,3 +386,13 @@ class Coordinator:
                 raise ValueError("only the assigned operator may release")
             ticket["assignee"] = None
         return self._metadata(ticket_id, event_id, "release", actor, edit, expected_revision)
+
+    def transfer(self, ticket_id, event_id, actor, target, expected_revision=None):
+        identifier(actor, "actor"); identifier(target, "target")
+        if actor == target:
+            raise ValueError("transfer target must be different")
+        def edit(ticket):
+            if ticket["state"] != "human" or ticket.get("assignee") != actor:
+                raise ValueError("only the assigned operator may transfer")
+            ticket["assignee"] = target
+        return self._metadata(ticket_id, event_id, "transfer", [actor, target], edit, expected_revision)
