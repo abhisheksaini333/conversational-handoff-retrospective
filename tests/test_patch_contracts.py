@@ -335,3 +335,9 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(result["assignee"], "two")
         self.assertEqual(self.core.conversation("c1")["state"], "human")
         with self.assertRaises(ValueError): self.core.transfer(ticket, "again", "one", "three")
+
+    def test_pending_selection_prioritizes_urgency(self):
+        first = self.request("first")["ticket_id"]
+        urgent = self.request("urgent")["ticket_id"]
+        self.core.set_priority(urgent, "priority", "urgent")
+        self.assertEqual([t["id"] for t in self.core.pending_queue(limit=2)], [urgent, first])

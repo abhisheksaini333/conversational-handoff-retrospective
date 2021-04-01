@@ -396,3 +396,11 @@ class Coordinator:
                 raise ValueError("only the assigned operator may transfer")
             ticket["assignee"] = target
         return self._metadata(ticket_id, event_id, "transfer", [actor, target], edit, expected_revision)
+
+    def pending_queue(self, limit=20):
+        if type(limit) is not int or not 1 <= limit <= 100:
+            raise ValueError("limit must be 1..100")
+        priorities = {"urgent": 0, "high": 1, "normal": 2, "low": 3}
+        # Stable sort retains insertion order for equal priority and legacy timestamps.
+        tickets = [t for t in self.tickets() if t["state"] == "pending"]
+        return sorted(tickets, key=lambda t: (priorities.get(t.get("priority", "normal"), 2), t.get("created_at", 0)))[:limit]
