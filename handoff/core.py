@@ -414,3 +414,10 @@ class Coordinator:
             except (ConnectionError, TimeoutError, ValueError):
                 result["failed"].append(ticket["id"])
         return result
+
+    def retention_preview(self, before):
+        if isinstance(before, bool) or not isinstance(before, (int, float)) or not math.isfinite(before) or before < 0:
+            raise ValueError("retention cutoff must be finite nonnegative seconds")
+        tickets = [t for t in self.tickets() if t["state"] in ("completed", "cancelled") and t.get("completed_at", t.get("cancelled_at", float("inf"))) < before]
+        return {"before": before, "ticket_ids": [t["id"] for t in tickets],
+                "context_messages": sum(len(t.get("context", [])) for t in tickets)}

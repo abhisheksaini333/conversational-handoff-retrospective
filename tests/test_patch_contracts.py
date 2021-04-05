@@ -353,3 +353,12 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(result["accepted"], [second])
         self.assertEqual(result["failed"], [first])
         self.assertNotIn("private", str(result))
+
+    def test_retention_preview_only_selects_old_closed_tickets(self):
+        self.core = Coordinator(self.path, clock=lambda: 100)
+        closed = self.accepted()
+        self.core.complete(closed, "done")
+        self.request("active")
+        self.assertEqual(self.core.retention_preview(101)["ticket_ids"], [closed])
+        self.assertEqual(self.core.retention_preview(99)["ticket_ids"], [])
+        self.assertTrue(self.core.ticket(closed)["context"])
