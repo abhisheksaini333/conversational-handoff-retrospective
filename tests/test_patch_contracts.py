@@ -341,3 +341,15 @@ class PatchContracts(unittest.TestCase):
         urgent = self.request("urgent")["ticket_id"]
         self.core.set_priority(urgent, "priority", "urgent")
         self.assertEqual([t["id"] for t in self.core.pending_queue(limit=2)], [urgent, first])
+
+    def test_dispatch_batch_continues_after_one_desk_failure(self):
+        first = self.request("first")["ticket_id"]
+        second = self.request("second")["ticket_id"]
+        class PartialDesk:
+            def accept(self, ticket):
+                if ticket["id"] == first: raise ConnectionError("private endpoint")
+                return {"accepted": True, "ticket_id": ticket["id"]}
+        result = self.core.dispatch_pending(PartialDesk())
+        self.assertEqual(result["accepted"], [second])
+        self.assertEqual(result["failed"], [first])
+        self.assertNotIn("private", str(result))

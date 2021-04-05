@@ -404,3 +404,13 @@ class Coordinator:
         # Stable sort retains insertion order for equal priority and legacy timestamps.
         tickets = [t for t in self.tickets() if t["state"] == "pending"]
         return sorted(tickets, key=lambda t: (priorities.get(t.get("priority", "normal"), 2), t.get("created_at", 0)))[:limit]
+
+    def dispatch_pending(self, desk, limit=20):
+        result = {"accepted": [], "failed": []}
+        for ticket in self.pending_queue(limit):
+            try:
+                state = self.dispatch(ticket["id"], desk)
+                result["accepted" if state["state"] == "human" else "failed"].append(ticket["id"])
+            except (ConnectionError, TimeoutError, ValueError):
+                result["failed"].append(ticket["id"])
+        return result
