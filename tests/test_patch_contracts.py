@@ -362,3 +362,22 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(self.core.retention_preview(101)["ticket_ids"], [closed])
         self.assertEqual(self.core.retention_preview(99)["ticket_ids"], [])
         self.assertTrue(self.core.ticket(closed)["context"])
+
+    def test_redaction_keeps_receipts_and_clears_closed_context(self):
+        ticket = self.accepted()
+        self.core.complete(ticket, "done")
+        result = self.core.redact_ticket(ticket)
+        self.assertTrue(result["redacted"])
+        self.assertEqual(self.core.ticket(ticket)["context"], [])
+        self.assertEqual(self.core.complete(ticket, "done")["state"], "bot")
+        active = self.request("active")["ticket_id"]
+        with self.assertRaises(ValueError): self.core.redact_ticket(active)
+
+    def test_redacting_an_old_ticket_preserves_newer_conversation_context(self):
+        first = self.accepted()
+        self.core.complete(first, "done-first")
+        second = self.request(event="second")["ticket_id"]
+        self.core.dispatch(second, Desk()); self.core.complete(second, "done-second")
+        prior = self.core.conversation("c1")["context"]
+        self.core.redact_ticket(first)
+        self.assertEqual(self.core.conversation("c1")["context"], prior)

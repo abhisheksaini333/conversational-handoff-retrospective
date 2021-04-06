@@ -421,3 +421,29 @@ class Coordinator:
         tickets = [t for t in self.tickets() if t["state"] in ("completed", "cancelled") and t.get("completed_at", t.get("cancelled_at", float("inf"))) < before]
         return {"before": before, "ticket_ids": [t["id"] for t in tickets],
                 "context_messages": sum(len(t.get("context", [])) for t in tickets)}
+
+    def redact_ticket(self, ticket_id):
+        identifier(ticket_id, "ticket_id")
+        with self._transaction() as db:
+            ticket = self._get(db, "tickets", ticket_id)
+            if ticket is None:
+                raise KeyError("ticket not found")
+            if ticket["state"] not in ("completed", "cancelled"):
+                raise ValueError("active transcripts cannot be redacted")
+            ticket.update(context=[], notes=[], redacted=True)
+            ticket.pop("cancellation_reason", None)
+            self._put(db, "tickets", ticket_id, ticket)
+            state = self._get(db, "conversations", ticket["conversation"])
+            related = [json.loads(row[0]) for row in db.execute("SELECT data FROM tickets ORDER BY rowid")]
+            newest = next((t["id"] for t in reversed(related) if t["conversation"] == ticket["conversation"]), None)
+            if newest == ticket_id and state and state["state"] == "bot" and state["ticket_id"] is None:
+                state["context"] = []
+                self._put(db, "conversations", state["id"], state)
+            # Metadata receipts may contain historical notes/context. Preserve fingerprints
+            # and stable operation identity while removing the content from replay payloads.
+            for event, raw in db.execute("SELECT event,result FROM receipts WHERE scope=?", ("metadata:"+ticket_id,)).fetchall():
+                receipt = json.loads(raw)
+                receipt.update(context=[], notes=[], redacted=True)
+                receipt.pop("cancellation_reason", None)
+                db.execute("UPDATE receipts SET result=? WHERE scope=? AND event=?", (canonical(receipt), "metadata:"+ticket_id, event))
+            return {"ticket_id": ticket_id, "redacted": True}
