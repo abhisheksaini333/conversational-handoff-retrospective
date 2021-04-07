@@ -55,7 +55,16 @@ class Coordinator:
     def _get(db, table, key):
         # table is always a fixed internal constant, never caller input.
         row = db.execute("SELECT data FROM " + table + " WHERE id=?", (key,)).fetchone()
-        return json.loads(row[0]) if row else None
+        if not row:
+            return None
+        try:
+            result = json.loads(row[0])
+            states = ("bot", "pending", "human") if table == "conversations" else ("pending", "human", "completed", "cancelled")
+            if not isinstance(result, dict) or result.get("id") != key or result.get("state") not in states:
+                raise ValueError("invalid persisted state")
+            return result
+        except (ValueError, TypeError) as error:
+            raise sqlite3.DatabaseError("invalid persisted state") from error
 
     @staticmethod
     def _put(db, table, key, data):

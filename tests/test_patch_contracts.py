@@ -381,3 +381,9 @@ class PatchContracts(unittest.TestCase):
         prior = self.core.conversation("c1")["context"]
         self.core.redact_ticket(first)
         self.assertEqual(self.core.conversation("c1")["context"], prior)
+
+    def test_corrupt_storage_is_reported_as_unavailable(self):
+        self.request("broken")
+        with sqlite3.connect(self.path) as db: db.execute("UPDATE conversations SET data='[]' WHERE id='broken'")
+        with self.assertRaises(sqlite3.DatabaseError): self.core.conversation("broken")
+        self.assertEqual(self.http("/conversations/broken", method="GET")[0], 503)
