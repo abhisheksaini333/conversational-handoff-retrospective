@@ -2,6 +2,7 @@
 import hmac
 import json
 import os
+import re
 import sqlite3
 import urllib.error
 import urllib.parse
@@ -89,7 +90,21 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                 return False
             return True
 
+        def parse_target(self):
+            parsed = urllib.parse.urlsplit(self.path)
+            if parsed.scheme or parsed.netloc or parsed.fragment or re.search(r"%(?![0-9a-fA-F]{2})", parsed.path):
+                raise ValueError("invalid request target")
+            values = urllib.parse.parse_qs(parsed.query, keep_blank_values=True, strict_parsing=True)
+            if any(len(value) != 1 for value in values.values()):
+                raise ValueError("duplicate query parameter")
+            self.query = {key: value[0] for key, value in values.items()}
+            self.path = parsed.path
+
         def do_GET(self):
+            try:
+                self.parse_target()
+            except ValueError:
+                self.reply(400, {'error':'invalid request target'}); return
             if self.path=='/health':
                 self.reply(200,{'status':'ok','mode':'synthetic-demo'})
             elif self.path=='/ready':
@@ -121,6 +136,12 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
 
         def do_POST(self):
             if not self.authorized(): return
+            try:
+                self.parse_target()
+                if self.query:
+                    raise ValueError("mutation query parameters are unsupported")
+            except ValueError:
+                self.reply(400, {'error':'invalid request target'}); return
             try:
                 if self.headers.get('Transfer-Encoding') or len(self.headers.get_all('Content-Length', [])) != 1:
                     self.reply(400, {'error':'unambiguous Content-Length required'}); return

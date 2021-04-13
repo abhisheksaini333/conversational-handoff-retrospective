@@ -387,3 +387,10 @@ class PatchContracts(unittest.TestCase):
         with sqlite3.connect(self.path) as db: db.execute("UPDATE conversations SET data='[]' WHERE id='broken'")
         with self.assertRaises(sqlite3.DatabaseError): self.core.conversation("broken")
         self.assertEqual(self.http("/conversations/broken", method="GET")[0], 503)
+
+    def test_query_parameters_do_not_become_conversation_ids(self):
+        self.accepted(conversation="query")
+        code, result, _ = self.http("/conversations/query?view=state", method="GET")
+        self.assertEqual(code, 200)
+        self.assertEqual(result["state"], "human")
+        self.assertEqual(self.http("/tickets?limit=1&limit=2", method="GET")[0], 400)
