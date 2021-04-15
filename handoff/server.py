@@ -117,7 +117,16 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                 except sqlite3.Error:
                     self.reply(503, {'status':'unavailable'})
             elif self.authorized():
-                if self.path=='/tickets':
+                if self.path == '/tickets/page':
+                    try:
+                        if set(self.query)-{'limit','after','state','conversation','reason'}:
+                            raise ValueError('unknown query parameter')
+                        self.reply(200, core.ticket_page(limit=int(self.query.get('limit',50)), after=int(self.query.get('after',0)), state=self.query.get('state'), conversation=self.query.get('conversation'), reason=self.query.get('reason')))
+                    except (ValueError, TypeError):
+                        self.reply(400, {'error':'invalid ticket query'})
+                    except sqlite3.Error:
+                        self.reply(503, {'error':'storage unavailable'})
+                elif self.path=='/tickets':
                     try:
                         self.reply(200,{'tickets':core.tickets()})
                     except sqlite3.Error:

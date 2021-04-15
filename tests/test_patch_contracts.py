@@ -394,3 +394,11 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(result["state"], "human")
         self.assertEqual(self.http("/tickets?limit=1&limit=2", method="GET")[0], 400)
+
+    def test_http_ticket_pages_apply_filters_and_limits(self):
+        self.request("one"); self.request("two")
+        code, result, _ = self.http("/tickets/page?limit=1&state=pending", method="GET")
+        self.assertEqual(code, 200)
+        self.assertEqual(len(result["items"]), 1)
+        self.assertIsNotNone(result["next_cursor"])
+        self.assertEqual(self.http("/tickets/page?limit=0", method="GET")[0], 400)
