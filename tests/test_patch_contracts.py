@@ -402,3 +402,10 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(len(result["items"]), 1)
         self.assertIsNotNone(result["next_cursor"])
         self.assertEqual(self.http("/tickets/page?limit=0", method="GET")[0], 400)
+
+    def test_metrics_endpoint_contains_counts_without_transcripts(self):
+        self.accepted()
+        code, result, _ = self.http("/metrics", method="GET")
+        self.assertEqual(code, 200)
+        self.assertEqual(result["queue"]["human"], 1)
+        self.assertNotIn("help", json.dumps(result))
