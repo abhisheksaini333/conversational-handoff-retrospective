@@ -409,3 +409,10 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(result["queue"]["human"], 1)
         self.assertNotIn("help", json.dumps(result))
+
+    def test_audit_endpoint_uses_bounded_cursor(self):
+        ticket = self.accepted()
+        code, result, _ = self.http("/audit?limit=1&ticket_id="+ticket, method="GET")
+        self.assertEqual(code, 200)
+        self.assertEqual(len(result["items"]), 1)
+        self.assertEqual(result["items"][0]["kind"], "created")

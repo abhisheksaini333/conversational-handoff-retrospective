@@ -117,7 +117,16 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                 except sqlite3.Error:
                     self.reply(503, {'status':'unavailable'})
             elif self.authorized():
-                if self.path == '/metrics':
+                if self.path == '/audit':
+                    try:
+                        if set(self.query)-{'limit','after','ticket_id'}:
+                            raise ValueError('unknown query parameter')
+                        self.reply(200, core.audit_page(limit=int(self.query.get('limit',50)), after=int(self.query.get('after',0)), ticket_id=self.query.get('ticket_id')))
+                    except (ValueError, TypeError):
+                        self.reply(400, {'error':'invalid audit query'})
+                    except sqlite3.Error:
+                        self.reply(503, {'error':'storage unavailable'})
+                elif self.path == '/metrics':
                     try:
                         self.reply(200, {'counts':core.snapshot_counts(), 'queue':core.queue_metrics(), 'delivery':core.retry_metrics(), 'resolution':core.resolution_metrics(), 'routing':core.routing_metrics()})
                     except sqlite3.Error:
