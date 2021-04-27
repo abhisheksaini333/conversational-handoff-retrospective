@@ -416,3 +416,15 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(len(result["items"]), 1)
         self.assertEqual(result["items"][0]["kind"], "created")
+
+    def test_metadata_http_commands_preserve_revision_and_ownership(self):
+        ticket = self.accepted()
+        path = "/tickets/"+ticket
+        code, result, _ = self.http(path+"/priority", {"event_id":"p", "priority":"high", "expected_revision":0})
+        self.assertEqual(code, 200); self.assertEqual(result["revision"], 1)
+        self.assertEqual(self.http(path+"/claim", {"event_id":"claim", "actor":"one"})[0], 200)
+        self.assertEqual(self.http(path+"/transfer", {"event_id":"transfer", "actor":"one", "target":"two"})[1]["assignee"], "two")
+        self.assertEqual(self.http(path+"/note", {"event_id":"note", "actor":"two", "text":"checked"})[0], 200)
+        self.assertEqual(self.http(path+"/tags", {"event_id":"tags", "tags":["Billing"]})[1]["tags"], ["billing"])
+        self.assertEqual(self.http(path+"/release", {"event_id":"release", "actor":"two"})[0], 200)
+        self.assertEqual(self.http(path+"/claim", {"event_id":"claim2", "actor":"one", "unexpected":True})[0], 400)

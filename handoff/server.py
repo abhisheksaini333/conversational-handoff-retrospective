@@ -198,6 +198,14 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                         raise ValueError('available must be boolean')
                     desk.available=body['available']
                     self.reply(200,{'available':desk.available})
+                elif self.path.startswith('/tickets/') and self.path.rsplit('/',1)[-1] in ('priority','tags','note','claim','release','transfer'):
+                    operation = self.path.rsplit('/',1)[-1]
+                    ticket_id = urllib.parse.unquote(self.path[len('/tickets/'):].rsplit('/',1)[0])
+                    methods = {'priority':(core.set_priority, {'priority'}), 'tags':(core.set_tags, {'tags'}), 'note':(core.add_note, {'actor','text'}), 'claim':(core.claim, {'actor'}), 'release':(core.release, {'actor'}), 'transfer':(core.transfer, {'actor','target'})}
+                    method, required = methods[operation]
+                    if not required | {'event_id'} <= set(body) or set(body) - required - {'event_id','expected_revision'}:
+                        raise ValueError('invalid operation fields')
+                    self.reply(200, method(ticket_id, **body))
                 elif self.path.startswith('/tickets/') and self.path.endswith('/complete'):
                     if set(body)!={'event_id'}: raise ValueError('event_id is required')
                     ticket_id=self.path[len('/tickets/'):-len('/complete')]
