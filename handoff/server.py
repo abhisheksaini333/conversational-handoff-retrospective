@@ -206,6 +206,11 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                     if not required | {'event_id'} <= set(body) or set(body) - required - {'event_id','expected_revision'}:
                         raise ValueError('invalid operation fields')
                     self.reply(200, method(ticket_id, **body))
+                elif self.path.startswith('/tickets/') and self.path.endswith('/cancel'):
+                    if set(body) != {'event_id','reason'}:
+                        raise ValueError('cancellation fields required')
+                    ticket_id = urllib.parse.unquote(self.path[len('/tickets/'):-len('/cancel')])
+                    self.reply(200, core.cancel(ticket_id, body['event_id'], body['reason']))
                 elif self.path.startswith('/tickets/') and self.path.endswith('/complete'):
                     if set(body)!={'event_id'}: raise ValueError('event_id is required')
                     ticket_id=self.path[len('/tickets/'):-len('/complete')]

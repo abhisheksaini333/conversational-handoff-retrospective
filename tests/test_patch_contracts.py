@@ -428,3 +428,9 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(self.http(path+"/tags", {"event_id":"tags", "tags":["Billing"]})[1]["tags"], ["billing"])
         self.assertEqual(self.http(path+"/release", {"event_id":"release", "actor":"two"})[0], 200)
         self.assertEqual(self.http(path+"/claim", {"event_id":"claim2", "actor":"one", "unexpected":True})[0], 400)
+
+    def test_http_cancellation_rejects_human_owned_tickets(self):
+        pending = self.request("pending")["ticket_id"]
+        self.assertEqual(self.http("/tickets/"+pending+"/cancel", {"event_id":"cancel", "reason":"withdrawn"})[0], 200)
+        human = self.accepted()
+        self.assertEqual(self.http("/tickets/"+human+"/cancel", {"event_id":"cancel", "reason":"withdrawn"})[0], 400)
