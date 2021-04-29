@@ -193,6 +193,10 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                             self.reply(202,result);return
                     result['bot_reply'] = None if result['state'] == 'human' else result['bot_reply']
                     self.reply(200,result)
+                elif self.path == '/queue/dispatch':
+                    if set(body) - {'limit'}:
+                        raise ValueError('unknown dispatch field')
+                    self.reply(200, core.dispatch_pending(desk, body.get('limit',20)))
                 elif self.path=='/demo/desk':
                     if set(body)!={'available'} or not isinstance(body['available'],bool):
                         raise ValueError('available must be boolean')

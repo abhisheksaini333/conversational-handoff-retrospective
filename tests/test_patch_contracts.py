@@ -434,3 +434,10 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(self.http("/tickets/"+pending+"/cancel", {"event_id":"cancel", "reason":"withdrawn"})[0], 200)
         human = self.accepted()
         self.assertEqual(self.http("/tickets/"+human+"/cancel", {"event_id":"cancel", "reason":"withdrawn"})[0], 400)
+
+    def test_queue_retry_http_dispatches_pending_tickets(self):
+        ticket = self.request()["ticket_id"]
+        code, result, _ = self.http("/queue/dispatch", {"limit":1})
+        self.assertEqual(code, 200)
+        self.assertEqual(result["accepted"], [ticket])
+        self.assertEqual(self.http("/queue/dispatch", {"limit":1000})[0], 400)
