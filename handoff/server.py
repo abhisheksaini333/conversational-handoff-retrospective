@@ -117,7 +117,17 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                 except sqlite3.Error:
                     self.reply(503, {'status':'unavailable'})
             elif self.authorized():
-                if self.path == '/audit':
+                if self.path.startswith('/tickets/') and self.path.endswith('/summary'):
+                    try:
+                        ticket_id = urllib.parse.unquote(self.path[len('/tickets/'):-len('/summary')])
+                        self.reply(200, core.ticket_summary(ticket_id))
+                    except ValueError:
+                        self.reply(400, {'error':'invalid ticket identifier'})
+                    except KeyError:
+                        self.reply(404, {'error':'ticket not found'})
+                    except sqlite3.Error:
+                        self.reply(503, {'error':'storage unavailable'})
+                elif self.path == '/audit':
                     try:
                         if set(self.query)-{'limit','after','ticket_id'}:
                             raise ValueError('unknown query parameter')

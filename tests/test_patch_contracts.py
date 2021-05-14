@@ -441,3 +441,9 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(result["accepted"], [ticket])
         self.assertEqual(self.http("/queue/dispatch", {"limit":1000})[0], 400)
+
+    def test_http_ticket_summary_is_redacted_and_missing_is_404(self):
+        ticket = self.request()["ticket_id"]
+        code, result, _ = self.http("/tickets/"+ticket+"/summary", method="GET")
+        self.assertEqual(code, 200); self.assertNotIn("context", result)
+        self.assertEqual(self.http("/tickets/missing/summary", method="GET")[0], 404)
