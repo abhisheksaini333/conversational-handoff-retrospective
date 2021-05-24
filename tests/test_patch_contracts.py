@@ -447,3 +447,10 @@ class PatchContracts(unittest.TestCase):
         code, result, _ = self.http("/tickets/"+ticket+"/summary", method="GET")
         self.assertEqual(code, 200); self.assertNotIn("context", result)
         self.assertEqual(self.http("/tickets/missing/summary", method="GET")[0], 404)
+
+    def test_http_export_includes_hash_and_conversation(self):
+        self.accepted()
+        code, result, _ = self.http("/exports/c1", method="GET")
+        self.assertEqual(code, 200)
+        self.assertEqual(len(result["sha256"]), 64)
+        self.assertEqual(result["data"]["conversation"]["id"], "c1")

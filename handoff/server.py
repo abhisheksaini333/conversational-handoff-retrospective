@@ -117,7 +117,16 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                 except sqlite3.Error:
                     self.reply(503, {'status':'unavailable'})
             elif self.authorized():
-                if self.path.startswith('/tickets/') and self.path.endswith('/summary'):
+                if self.path.startswith('/exports/'):
+                    try:
+                        self.reply(200, core.export_bundle(urllib.parse.unquote(self.path[len('/exports/'):])))
+                    except ValueError:
+                        self.reply(400, {'error':'invalid conversation'})
+                    except KeyError:
+                        self.reply(404, {'error':'conversation not found'})
+                    except sqlite3.Error:
+                        self.reply(503, {'error':'storage unavailable'})
+                elif self.path.startswith('/tickets/') and self.path.endswith('/summary'):
                     try:
                         ticket_id = urllib.parse.unquote(self.path[len('/tickets/'):-len('/summary')])
                         self.reply(200, core.ticket_summary(ticket_id))
