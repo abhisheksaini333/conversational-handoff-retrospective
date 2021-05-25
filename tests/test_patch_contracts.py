@@ -454,3 +454,9 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(code, 200)
         self.assertEqual(len(result["sha256"]), 64)
         self.assertEqual(result["data"]["conversation"]["id"], "c1")
+
+    def test_http_retention_preview_is_read_only(self):
+        ticket = self.accepted(); self.core.complete(ticket, "done")
+        code, result, _ = self.http("/retention?before=9999999999", method="GET")
+        self.assertEqual(code, 200); self.assertEqual(result["ticket_ids"], [ticket])
+        self.assertTrue(self.core.ticket(ticket)["context"])

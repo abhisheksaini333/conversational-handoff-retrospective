@@ -117,7 +117,16 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                 except sqlite3.Error:
                     self.reply(503, {'status':'unavailable'})
             elif self.authorized():
-                if self.path.startswith('/exports/'):
+                if self.path == '/retention':
+                    try:
+                        if set(self.query) != {'before'}:
+                            raise ValueError('before cutoff is required')
+                        self.reply(200, core.retention_preview(float(self.query['before'])))
+                    except ValueError:
+                        self.reply(400, {'error':'invalid retention cutoff'})
+                    except sqlite3.Error:
+                        self.reply(503, {'error':'storage unavailable'})
+                elif self.path.startswith('/exports/'):
                     try:
                         self.reply(200, core.export_bundle(urllib.parse.unquote(self.path[len('/exports/'):])))
                     except ValueError:
