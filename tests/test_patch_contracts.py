@@ -460,3 +460,9 @@ class PatchContracts(unittest.TestCase):
         code, result, _ = self.http("/retention?before=9999999999", method="GET")
         self.assertEqual(code, 200); self.assertEqual(result["ticket_ids"], [ticket])
         self.assertTrue(self.core.ticket(ticket)["context"])
+
+    def test_http_redaction_requires_matching_confirmation(self):
+        ticket = self.accepted(); self.core.complete(ticket, "done")
+        path = "/tickets/"+ticket+"/redact"
+        self.assertEqual(self.http(path, {"confirm_ticket_id":"wrong"})[0], 400)
+        self.assertEqual(self.http(path, {"confirm_ticket_id":ticket})[1]["redacted"], True)
