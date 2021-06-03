@@ -198,7 +198,10 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                     self.reply(400, {'error':'unambiguous Content-Length required'}); return
                 if self.headers.get_content_type() != 'application/json' or self.headers.get_content_charset('utf-8').lower() != 'utf-8':
                     self.reply(415, {'error':'UTF-8 application/json required'}); return
-                length=int(self.headers.get('Content-Length','0'))
+                length_text = self.headers.get('Content-Length','')
+                if not length_text.isascii() or not length_text.isdecimal():
+                    self.reply(400, {'error':'invalid Content-Length'}); return
+                length=int(length_text)
                 if not 0<length<=65536:
                     self.reply(413,{'error':'body must be between 1 and 65536 bytes'});return
                 body=strict_json(self.rfile.read(length))

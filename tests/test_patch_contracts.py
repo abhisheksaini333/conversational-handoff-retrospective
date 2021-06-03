@@ -466,3 +466,7 @@ class PatchContracts(unittest.TestCase):
         path = "/tickets/"+ticket+"/redact"
         self.assertEqual(self.http(path, {"confirm_ticket_id":"wrong"})[0], 400)
         self.assertEqual(self.http(path, {"confirm_ticket_id":ticket})[1]["redacted"], True)
+
+    def test_signed_content_length_is_rejected(self):
+        raw = b'{"available":true}'
+        self.assertEqual(self.http("/demo/desk", raw, {"Content-Length":"+"+str(len(raw))})[0], 400)
