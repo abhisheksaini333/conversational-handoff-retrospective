@@ -1,6 +1,7 @@
 """Authenticated loopback demo service. No real human service is contacted."""
 import hmac
 import json
+import math
 import os
 import re
 import sqlite3
@@ -38,9 +39,11 @@ def resume_events(result):
     return events
 
 
-def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_token=None):
+def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_token=None, request_timeout=5):
     if not isinstance(token, str) or len(token)<16 or any(c.isspace() or ord(c)<33 or ord(c)>126 for c in token):
         raise ValueError('HANDOFF_TOKEN must contain at least 16 characters')
+    if isinstance(request_timeout, bool) or not isinstance(request_timeout, (int,float)) or not math.isfinite(request_timeout) or not 0 < request_timeout <= 30:
+        raise ValueError("request_timeout must be between zero and 30 seconds")
     if rasa_url is not None:
         parsed = urllib.parse.urlsplit(rasa_url)
         if parsed.scheme not in ('http', 'https') or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
@@ -61,6 +64,10 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                 raise ConnectionError('resume rejected')
 
     class Handler(BaseHTTPRequestHandler):
+        def setup(self):
+            super().setup()
+            self.connection.settimeout(request_timeout)
+
         def log_message(self,*args):
             pass  # Avoid logging tokens, transcript text or query strings.
 
@@ -204,7 +211,11 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                 length=int(length_text)
                 if not 0<length<=65536:
                     self.reply(413,{'error':'body must be between 1 and 65536 bytes'});return
-                body=strict_json(self.rfile.read(length))
+                try:
+                    raw = self.rfile.read(length)
+                except TimeoutError:
+                    self.reply(408, {"error":"request body timed out"}); return
+                body=strict_json(raw)
                 if not isinstance(body,dict): raise ValueError('body must be an object')
                 if self.path=='/handoffs':
                     if set(body)-{'conversation','event_id','text','intent','confidence','active_form','context'}:

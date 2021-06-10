@@ -470,3 +470,15 @@ class PatchContracts(unittest.TestCase):
     def test_signed_content_length_is_rejected(self):
         raw = b'{"available":true}'
         self.assertEqual(self.http("/demo/desk", raw, {"Content-Length":"+"+str(len(raw))})[0], 400)
+
+    def test_slow_body_receives_request_timeout(self):
+        import socket, threading
+        from handoff.server import make_server
+        server = make_server(self.core, "local-test-credential", port=0, request_timeout=.05)
+        thread = threading.Thread(target=lambda: server.serve_forever(poll_interval=.01), daemon=True); thread.start()
+        client = socket.create_connection(server.server_address, timeout=2)
+        try:
+            client.sendall(b"POST /demo/desk HTTP/1.0\r\nAuthorization: Bearer local-test-credential\r\nContent-Type: application/json\r\nContent-Length: 20\r\n\r\n{")
+            self.assertIn(b" 408 ", client.recv(2048))
+        finally:
+            client.close(); server.shutdown(); server.server_close(); thread.join()
