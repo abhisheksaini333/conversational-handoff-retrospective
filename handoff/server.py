@@ -215,6 +215,8 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                     raw = self.rfile.read(length)
                 except TimeoutError:
                     self.reply(408, {"error":"request body timed out"}); return
+                if len(raw) != length:
+                    self.reply(400, {"error":"truncated request body"}); return
                 body=strict_json(raw)
                 if not isinstance(body,dict): raise ValueError('body must be an object')
                 if self.path=='/handoffs':

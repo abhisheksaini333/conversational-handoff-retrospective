@@ -482,3 +482,17 @@ class PatchContracts(unittest.TestCase):
             self.assertIn(b" 408 ", client.recv(2048))
         finally:
             client.close(); server.shutdown(); server.server_close(); thread.join()
+
+    def test_short_valid_json_body_does_not_change_desk_state(self):
+        import socket, threading
+        from handoff.server import make_server
+        server = make_server(self.core, "local-test-credential", port=0)
+        thread = threading.Thread(target=lambda: server.serve_forever(poll_interval=.01), daemon=True); thread.start()
+        client = socket.create_connection(server.server_address, timeout=2)
+        body = b'{"available":true}'
+        try:
+            client.sendall(b"POST /demo/desk HTTP/1.0\r\nAuthorization: Bearer local-test-credential\r\nContent-Type: application/json\r\nContent-Length: 99\r\n\r\n"+body)
+            client.shutdown(socket.SHUT_WR)
+            self.assertIn(b" 400 ", client.recv(2048))
+        finally:
+            client.close(); server.shutdown(); server.server_close(); thread.join()
