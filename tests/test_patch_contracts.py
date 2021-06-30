@@ -496,3 +496,19 @@ class PatchContracts(unittest.TestCase):
             self.assertIn(b" 400 ", client.recv(2048))
         finally:
             client.close(); server.shutdown(); server.server_close(); thread.join()
+
+    def test_duplicate_authorization_headers_are_not_ambiguous(self):
+        import http.client, threading
+        from handoff.server import make_server
+        server = make_server(self.core, "local-test-credential", port=0)
+        thread = threading.Thread(target=lambda: server.serve_forever(poll_interval=.01), daemon=True); thread.start()
+        client = http.client.HTTPConnection(*server.server_address, timeout=2)
+        try:
+            client.putrequest("GET", "/tickets")
+            client.putheader("Authorization", "Bearer local-test-credential")
+            client.putheader("Authorization", "Bearer somebody-else")
+            client.endheaders()
+            response = client.getresponse(); response.read()
+            self.assertEqual(response.status, 401)
+        finally:
+            client.close(); server.shutdown(); server.server_close(); thread.join()

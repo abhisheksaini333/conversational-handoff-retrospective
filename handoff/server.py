@@ -92,7 +92,7 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
 
         def authorized(self):
             supplied=self.headers.get('Authorization','')
-            if not hmac.compare_digest(supplied.encode(),('Bearer '+token).encode()):
+            if len(self.headers.get_all('Authorization', [])) != 1 or not hmac.compare_digest(supplied.encode(),('Bearer '+token).encode()):
                 self.reply(401,{'error':'authentication required'})
                 return False
             return True
