@@ -200,6 +200,9 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                     raise ValueError("mutation query parameters are unsupported")
             except ValueError:
                 self.reply(400, {'error':'invalid request target'}); return
+            known = self.path in ('/handoffs','/demo/desk','/queue/dispatch') or (self.path.startswith('/tickets/') and self.path.rsplit('/',1)[-1] in ('priority','tags','note','claim','release','transfer','cancel','complete','redact'))
+            if not known:
+                self.reply(404, {'error':'not found'}); return
             try:
                 if self.headers.get('Transfer-Encoding') or len(self.headers.get_all('Content-Length', [])) != 1:
                     self.reply(400, {'error':'unambiguous Content-Length required'}); return

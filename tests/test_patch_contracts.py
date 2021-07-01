@@ -512,3 +512,6 @@ class PatchContracts(unittest.TestCase):
             self.assertEqual(response.status, 401)
         finally:
             client.close(); server.shutdown(); server.server_close(); thread.join()
+
+    def test_unknown_post_route_is_404_without_a_body(self):
+        self.assertEqual(self.http("/unknown", method="POST")[0], 404)
