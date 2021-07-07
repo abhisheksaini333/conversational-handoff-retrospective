@@ -515,3 +515,32 @@ class PatchContracts(unittest.TestCase):
 
     def test_unknown_post_route_is_404_without_a_body(self):
         self.assertEqual(self.http("/unknown", method="POST")[0], 404)
+
+    def test_rasa_redirect_is_not_followed(self):
+        import threading
+        from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+        from handoff.server import make_server
+        import http.client
+        class Redirect(BaseHTTPRequestHandler):
+            visits = 0
+            def log_message(self, *args): pass
+            def do_POST(self):
+                type(self).visits += 1
+                self.send_response(307); self.send_header("Location", "/stolen"); self.end_headers()
+            def do_GET(self):
+                type(self).visits += 1
+                self.send_response(200); self.end_headers()
+        target = ThreadingHTTPServer(("127.0.0.1", 0), Redirect)
+        tt = threading.Thread(target=lambda: target.serve_forever(poll_interval=.01), daemon=True); tt.start()
+        service = make_server(self.core, "local-test-credential", port=0, rasa_url="http://127.0.0.1:"+str(target.server_port), rasa_token="synthetic-token")
+        st = threading.Thread(target=lambda: service.serve_forever(poll_interval=.01), daemon=True); st.start()
+        ticket = self.accepted()
+        client = http.client.HTTPConnection(*service.server_address, timeout=2)
+        try:
+            client.request("POST", "/tickets/"+ticket+"/complete", json.dumps({"event_id":"done"}), {"Authorization":"Bearer local-test-credential", "Content-Type":"application/json"})
+            response = client.getresponse(); response.read()
+            self.assertEqual(response.status, 503)
+            self.assertEqual(Redirect.visits, 1)
+            self.assertEqual(self.core.ticket(ticket)["state"], "human")
+        finally:
+            client.close(); service.shutdown(); service.server_close(); st.join(); target.shutdown(); target.server_close(); tt.join()

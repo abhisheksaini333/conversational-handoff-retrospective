@@ -14,6 +14,11 @@ from handoff.core import Coordinator, canonical, identifier
 from handoff.http_contracts import strict_json
 
 
+class NoRedirect(urllib.request.HTTPRedirectHandler):
+    def redirect_request(self, request, fp, code, message, headers, newurl):
+        raise urllib.error.URLError('callback redirects are disabled')
+
+
 class SimulatedDesk:
     """Durable acknowledgement keyed by ticket ID, with explicit fault injection."""
     def __init__(self, database):
@@ -59,7 +64,7 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
             # Rasa 2 HTTP API accepts its configured authentication token.
             url += '?'+urllib.parse.urlencode({'token':rasa_token})
         request=urllib.request.Request(url,data=canonical(resume_events(result)).encode(),headers=headers)
-        with urllib.request.urlopen(request,timeout=3) as response:
+        with urllib.request.build_opener(NoRedirect()).open(request,timeout=3) as response:
             if response.status!=200:
                 raise ConnectionError('resume rejected')
 
