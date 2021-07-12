@@ -544,3 +544,8 @@ class PatchContracts(unittest.TestCase):
             self.assertEqual(self.core.ticket(ticket)["state"], "human")
         finally:
             client.close(); service.shutdown(); service.server_close(); st.join(); target.shutdown(); target.server_close(); tt.join()
+
+    def test_head_health_has_headers_and_no_payload(self):
+        code, body, headers = self.http("/health", method="HEAD")
+        self.assertEqual(code, 200); self.assertIsNone(body)
+        self.assertGreater(int(headers["Content-Length"]), 0)

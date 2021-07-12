@@ -88,7 +88,9 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                 self.send_header('Retry-After', '1')
             for name, value in (extra_headers or {}).items():
                 self.send_header(name, value)
-            self.end_headers();self.wfile.write(raw)
+            self.end_headers()
+            if self.command != "HEAD":
+                self.wfile.write(raw)
 
         def method_not_allowed(self):
             self.reply(405, {'error':'method not allowed'}, {'Allow':'GET, POST'})
@@ -196,6 +198,9 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                     except sqlite3.Error:
                         self.reply(503,{'error':'storage unavailable'})
                 else: self.reply(404,{'error':'not found'})
+
+        def do_HEAD(self):
+            self.do_GET()
 
         def do_POST(self):
             if not self.authorized(): return
