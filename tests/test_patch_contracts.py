@@ -549,3 +549,11 @@ class PatchContracts(unittest.TestCase):
         code, body, headers = self.http("/health", method="HEAD")
         self.assertEqual(code, 200); self.assertIsNone(body)
         self.assertGreater(int(headers["Content-Length"]), 0)
+
+    def test_resume_timeout_configuration_is_validated(self):
+        from handoff.server import make_server
+        for timeout in [0, -1, 31, True, math.inf]:
+            with self.subTest(timeout=timeout), self.assertRaises(ValueError):
+                make_server(self.core, "local-test-credential", port=0, resume_timeout=timeout)
+        server = make_server(self.core, "local-test-credential", port=0, resume_timeout=.25)
+        server.server_close()
