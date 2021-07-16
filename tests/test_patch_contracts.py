@@ -557,3 +557,11 @@ class PatchContracts(unittest.TestCase):
                 make_server(self.core, "local-test-credential", port=0, resume_timeout=timeout)
         server = make_server(self.core, "local-test-credential", port=0, resume_timeout=.25)
         server.server_close()
+
+    def test_configurable_body_limit_rejects_oversized_payload(self):
+        from handoff.server import make_server
+        for limit in [0, True, 1048577]:
+            with self.assertRaises(ValueError): make_server(self.core, "local-test-credential", port=0, body_limit=limit)
+        server = make_server(self.core, "local-test-credential", port=0, body_limit=128)
+        self.assertEqual(server.body_limit, 128)
+        server.server_close()

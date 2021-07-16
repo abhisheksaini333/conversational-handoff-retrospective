@@ -44,13 +44,15 @@ def resume_events(result):
     return events
 
 
-def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_token=None, request_timeout=5, resume_timeout=3):
+def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_token=None, request_timeout=5, resume_timeout=3, body_limit=65536):
     if not isinstance(token, str) or len(token)<16 or any(c.isspace() or ord(c)<33 or ord(c)>126 for c in token):
         raise ValueError('HANDOFF_TOKEN must contain at least 16 characters')
     if isinstance(request_timeout, bool) or not isinstance(request_timeout, (int,float)) or not math.isfinite(request_timeout) or not 0 < request_timeout <= 30:
         raise ValueError("request_timeout must be between zero and 30 seconds")
     if isinstance(resume_timeout, bool) or not isinstance(resume_timeout, (int,float)) or not math.isfinite(resume_timeout) or not 0 < resume_timeout <= 30:
         raise ValueError("resume_timeout must be between zero and 30 seconds")
+    if type(body_limit) is not int or not 1 <= body_limit <= 1048576:
+        raise ValueError("body_limit must be 1..1048576 bytes")
     if rasa_url is not None:
         parsed = urllib.parse.urlsplit(rasa_url)
         if parsed.scheme not in ('http', 'https') or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
@@ -224,8 +226,8 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                 if not length_text.isascii() or not length_text.isdecimal():
                     self.reply(400, {'error':'invalid Content-Length'}); return
                 length=int(length_text)
-                if not 0<length<=65536:
-                    self.reply(413,{'error':'body must be between 1 and 65536 bytes'});return
+                if not 0<length<=body_limit:
+                    self.reply(413,{'error':'body must be between 1 and '+str(body_limit)+' bytes'});return
                 try:
                     raw = self.rfile.read(length)
                 except TimeoutError:
@@ -295,7 +297,9 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
             except sqlite3.Error:
                 self.reply(503,{'error':'storage unavailable'})
 
-    return ThreadingHTTPServer((host,port),Handler)
+    server = ThreadingHTTPServer((host,port),Handler)
+    server.body_limit = body_limit
+    return server
 
 
 if __name__=='__main__':
