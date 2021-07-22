@@ -565,3 +565,17 @@ class PatchContracts(unittest.TestCase):
         server = make_server(self.core, "local-test-credential", port=0, body_limit=128)
         self.assertEqual(server.body_limit, 128)
         server.server_close()
+
+    def cli(self, *arguments):
+        import contextlib, io
+        from handoff.cli import main
+        out, error = io.StringIO(), io.StringIO()
+        with contextlib.redirect_stdout(out), contextlib.redirect_stderr(error):
+            code = main(["--database", self.path, *arguments])
+        return code, json.loads(out.getvalue()) if out.getvalue() else None, error.getvalue()
+
+    def test_cli_status_reports_durable_counts(self):
+        self.request()
+        code, result, error = self.cli("status")
+        self.assertEqual(code, 0); self.assertFalse(error)
+        self.assertEqual(result["tickets"], 1)
