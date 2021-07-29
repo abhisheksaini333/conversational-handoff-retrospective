@@ -579,3 +579,10 @@ class PatchContracts(unittest.TestCase):
         code, result, error = self.cli("status")
         self.assertEqual(code, 0); self.assertFalse(error)
         self.assertEqual(result["tickets"], 1)
+
+    def test_cli_tickets_supports_state_filter(self):
+        self.accepted()
+        self.request("pending")
+        code, result, _ = self.cli("tickets", "--state", "pending", "--limit", "1")
+        self.assertEqual(code, 0)
+        self.assertEqual(result["items"][0]["conversation"], "pending")
