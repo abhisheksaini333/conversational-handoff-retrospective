@@ -586,3 +586,7 @@ class PatchContracts(unittest.TestCase):
         code, result, _ = self.cli("tickets", "--state", "pending", "--limit", "1")
         self.assertEqual(code, 0)
         self.assertEqual(result["items"][0]["conversation"], "pending")
+
+    def test_cli_integrity_reports_database_check(self):
+        code, result, _ = self.cli("integrity")
+        self.assertEqual(code, 0); self.assertTrue(result["ok"])

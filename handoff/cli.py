@@ -12,6 +12,7 @@ def main(argv=None):
     parser.add_argument('--database', required=True)
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('status')
+    commands.add_parser('integrity')
     tickets = commands.add_parser('tickets')
     tickets.add_argument('--state', choices=['pending','human','completed','cancelled'])
     tickets.add_argument('--conversation')
@@ -26,8 +27,10 @@ def main(argv=None):
             result = core.snapshot_counts()
         elif args.command == 'tickets':
             result = core.ticket_page(limit=args.limit, after=args.after, state=args.state, conversation=args.conversation)
+        elif args.command == 'integrity':
+            result = core.integrity()
         print(json.dumps(result, sort_keys=True, allow_nan=False))
-        return 0
+        return 1 if args.command == "integrity" and not result["ok"] else 0
     except (ValueError, KeyError, OSError, sqlite3.Error) as error:
         print('Operation failed: '+str(error), file=sys.stderr)
         return 1
