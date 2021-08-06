@@ -590,3 +590,11 @@ class PatchContracts(unittest.TestCase):
     def test_cli_integrity_reports_database_check(self):
         code, result, _ = self.cli("integrity")
         self.assertEqual(code, 0); self.assertTrue(result["ok"])
+
+    def test_cli_backup_creates_private_verified_copy(self):
+        self.accepted()
+        destination = str(Path(self.temp.name) / "cli-backup.db")
+        code, result, _ = self.cli("backup", destination)
+        self.assertEqual(code, 0); self.assertTrue(result["verified"])
+        self.assertEqual(Path(destination).stat().st_mode & 0o777, 0o600)
+        self.assertEqual(self.cli("backup", destination)[0], 1)
