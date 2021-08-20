@@ -7,7 +7,7 @@ import sqlite3
 import time
 import uuid
 import unicodedata
-from contextlib import contextmanager
+from contextlib import contextmanager, closing
 
 
 def canonical(value):
@@ -272,8 +272,8 @@ class Coordinator:
         descriptor = os.open(str(path), os.O_CREAT | os.O_EXCL | os.O_WRONLY, 0o600)
         os.close(descriptor)
         try:
-            with sqlite3.connect(self.database, timeout=self.busy_timeout) as source:
-                with sqlite3.connect(str(path)) as target:
+            with closing(sqlite3.connect(self.database, timeout=self.busy_timeout)) as source, source:
+                with closing(sqlite3.connect(str(path))) as target, target:
                     source.backup(target)
                     if target.execute("PRAGMA integrity_check").fetchall() != [("ok",)]:
                         raise sqlite3.DatabaseError("backup integrity verification failed")

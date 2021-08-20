@@ -1,4 +1,5 @@
 """Authenticated loopback demo service. No real human service is contacted."""
+from contextlib import closing
 import hmac
 import json
 import math
@@ -24,13 +25,13 @@ class SimulatedDesk:
     def __init__(self, database):
         self.database = database
         self.available = True
-        with sqlite3.connect(database) as db:
+        with closing(sqlite3.connect(database)) as db, db:
             db.execute('CREATE TABLE IF NOT EXISTS desk_tickets (id TEXT PRIMARY KEY, payload TEXT NOT NULL)')
 
     def accept(self, ticket):
         if not self.available:
             raise ConnectionError('simulated desk unavailable')
-        with sqlite3.connect(self.database) as db:
+        with closing(sqlite3.connect(self.database)) as db, db:
             db.execute('INSERT OR IGNORE INTO desk_tickets VALUES (?,?)',(ticket['id'],canonical(ticket)))
         return {'accepted':True,'ticket_id':ticket['id']}
 

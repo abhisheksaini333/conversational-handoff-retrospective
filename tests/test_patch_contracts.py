@@ -1,3 +1,4 @@
+from contextlib import closing
 import concurrent.futures
 import copy
 import json
@@ -63,7 +64,7 @@ class PatchContracts(unittest.TestCase):
 
     def test_lookup_does_not_acquire_a_writer_lock(self):
         ticket = self.request()["ticket_id"]
-        with sqlite3.connect(self.path) as db:
+        with closing(sqlite3.connect(self.path)) as db, db:
             db.execute("BEGIN IMMEDIATE")
             self.assertEqual(self.core.ticket(ticket)["id"], ticket)
             self.assertEqual(self.core.conversation("c1")["state"], "pending")
@@ -143,7 +144,7 @@ class PatchContracts(unittest.TestCase):
 
     def test_readiness_detects_missing_schema(self):
         self.assertEqual(self.http("/ready", method="GET")[0], 200)
-        with sqlite3.connect(self.path) as db: db.execute("DROP TABLE conversations")
+        with closing(sqlite3.connect(self.path)) as db, db: db.execute("DROP TABLE conversations")
         self.assertEqual(self.http("/ready", method="GET")[0], 503)
         self.assertEqual(self.http("/health", method="GET")[0], 200)
 
@@ -273,7 +274,7 @@ class PatchContracts(unittest.TestCase):
     def test_ticket_writes_leave_redacted_atomic_audit_entries(self):
         ticket = self.accepted()
         self.core.complete(ticket, "done")
-        with sqlite3.connect(self.path) as db:
+        with closing(sqlite3.connect(self.path)) as db, db:
             rows = db.execute("SELECT kind,payload FROM audit ORDER BY sequence").fetchall()
         self.assertEqual([r[0] for r in rows], ["created", "delivery_attempt", "state:human", "state:completed"])
         self.assertNotIn("help", str(rows))
@@ -384,7 +385,7 @@ class PatchContracts(unittest.TestCase):
 
     def test_corrupt_storage_is_reported_as_unavailable(self):
         self.request("broken")
-        with sqlite3.connect(self.path) as db: db.execute("UPDATE conversations SET data='[]' WHERE id='broken'")
+        with closing(sqlite3.connect(self.path)) as db, db: db.execute("UPDATE conversations SET data='[]' WHERE id='broken'")
         with self.assertRaises(sqlite3.DatabaseError): self.core.conversation("broken")
         self.assertEqual(self.http("/conversations/broken", method="GET")[0], 503)
 
@@ -598,3 +599,17 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(code, 0); self.assertTrue(result["verified"])
         self.assertEqual(Path(destination).stat().st_mode & 0o777, 0o600)
         self.assertEqual(self.cli("backup", destination)[0], 1)
+
+    def test_desk_and_backup_close_sqlite_connections(self):
+        import gc, warnings
+        from handoff.server import SimulatedDesk
+        gc.collect()
+        with warnings.catch_warnings(record=True) as captured:
+            warnings.simplefilter("always", ResourceWarning)
+            desk = SimulatedDesk(self.path)
+            ticket = self.request()["ticket_id"]
+            desk.accept(self.core.ticket(ticket))
+            self.core.backup(Path(self.temp.name) / "closed.db")
+            del desk
+            gc.collect()
+        self.assertFalse([w for w in captured if "unclosed database" in str(w.message)])
