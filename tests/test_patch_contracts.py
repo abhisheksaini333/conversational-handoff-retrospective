@@ -613,3 +613,12 @@ class PatchContracts(unittest.TestCase):
             del desk
             gc.collect()
         self.assertFalse([w for w in captured if "unclosed database" in str(w.message)])
+
+    def test_cli_export_refuses_to_overwrite_an_existing_bundle(self):
+        self.accepted()
+        destination = str(Path(self.temp.name) / "export.json")
+        code, result, _ = self.cli("export", "c1", destination)
+        self.assertEqual(code, 0)
+        self.assertEqual(json.loads(Path(destination).read_text())["data"]["conversation"]["id"], "c1")
+        self.assertEqual(self.cli("export", "c1", destination)[0], 1)
+

@@ -1,6 +1,7 @@
 """Local operator commands. No remote requests or background mutations."""
 import argparse
 import json
+import os
 from pathlib import Path
 import sqlite3
 import sys
@@ -12,6 +13,9 @@ def main(argv=None):
     parser.add_argument('--database', required=True)
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('status')
+    export = commands.add_parser('export')
+    export.add_argument('conversation')
+    export.add_argument('destination')
     commands.add_parser('backup').add_argument('destination')
     commands.add_parser('integrity')
     tickets = commands.add_parser('tickets')
@@ -32,6 +36,13 @@ def main(argv=None):
             result = core.integrity()
         elif args.command == 'backup':
             result = core.backup(args.destination)
+        elif args.command == 'export':
+            bundle = core.export_bundle(args.conversation)
+            descriptor = os.open(args.destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
+            with os.fdopen(descriptor, 'w') as stream:
+                json.dump(bundle, stream, sort_keys=True, allow_nan=False)
+                stream.write('\n')
+            result = {'path':args.destination, 'sha256':bundle['sha256']}
         print(json.dumps(result, sort_keys=True, allow_nan=False))
         return 1 if args.command == "integrity" and not result["ok"] else 0
     except (ValueError, KeyError, OSError, sqlite3.Error) as error:
