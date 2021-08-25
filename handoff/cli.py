@@ -13,6 +13,7 @@ def main(argv=None):
     parser.add_argument('--database', required=True)
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('status')
+    commands.add_parser('retention').add_argument('--before', required=True, type=float)
     export = commands.add_parser('export')
     export.add_argument('conversation')
     export.add_argument('destination')
@@ -43,6 +44,8 @@ def main(argv=None):
                 json.dump(bundle, stream, sort_keys=True, allow_nan=False)
                 stream.write('\n')
             result = {'path':args.destination, 'sha256':bundle['sha256']}
+        elif args.command == 'retention':
+            result = core.retention_preview(args.before)
         print(json.dumps(result, sort_keys=True, allow_nan=False))
         return 1 if args.command == "integrity" and not result["ok"] else 0
     except (ValueError, KeyError, OSError, sqlite3.Error) as error:

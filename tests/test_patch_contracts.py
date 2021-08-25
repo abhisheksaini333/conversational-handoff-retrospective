@@ -622,3 +622,9 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(json.loads(Path(destination).read_text())["data"]["conversation"]["id"], "c1")
         self.assertEqual(self.cli("export", "c1", destination)[0], 1)
 
+
+    def test_cli_retention_lists_only_closed_candidates(self):
+        ticket = self.accepted(); self.core.complete(ticket, "done")
+        code, result, _ = self.cli("retention", "--before", "9999999999")
+        self.assertEqual(code, 0); self.assertEqual(result["ticket_ids"], [ticket])
+        self.assertTrue(self.core.ticket(ticket)["context"])
