@@ -628,3 +628,9 @@ class PatchContracts(unittest.TestCase):
         code, result, _ = self.cli("retention", "--before", "9999999999")
         self.assertEqual(code, 0); self.assertEqual(result["ticket_ids"], [ticket])
         self.assertTrue(self.core.ticket(ticket)["context"])
+
+    def test_cli_redaction_requires_matching_identifier(self):
+        ticket = self.accepted(); self.core.complete(ticket, "done")
+        self.assertEqual(self.cli("redact", ticket, "--confirm-ticket", "wrong")[0], 1)
+        self.assertEqual(self.cli("redact", ticket, "--confirm-ticket", ticket)[0], 0)
+        self.assertEqual(self.core.ticket(ticket)["context"], [])
