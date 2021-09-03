@@ -36,6 +36,7 @@ class Coordinator:
             db.execute("CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, data TEXT NOT NULL)")
             db.execute("CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, data TEXT NOT NULL)")
             db.execute("CREATE TABLE IF NOT EXISTS audit (sequence INTEGER PRIMARY KEY AUTOINCREMENT, ticket TEXT NOT NULL, conversation TEXT NOT NULL, kind TEXT NOT NULL, payload TEXT NOT NULL)")
+            db.execute("CREATE INDEX IF NOT EXISTS audit_ticket_sequence ON audit(ticket,sequence)")
             db.execute("CREATE TABLE IF NOT EXISTS receipts (scope TEXT, event TEXT, fingerprint TEXT NOT NULL, result TEXT NOT NULL, PRIMARY KEY(scope,event))")
 
     @contextmanager
@@ -325,7 +326,10 @@ class Coordinator:
         if ticket_id is not None:
             identifier(ticket_id, "ticket_id")
         with self._transaction(readonly=True) as db:
-            rows = list(db.execute("SELECT sequence,ticket,conversation,kind,payload FROM audit WHERE sequence>? AND (? IS NULL OR ticket=?) ORDER BY sequence LIMIT ?", (after, ticket_id, ticket_id, limit+1)))
+            if ticket_id is None:
+                rows = list(db.execute("SELECT sequence,ticket,conversation,kind,payload FROM audit WHERE sequence>? ORDER BY sequence LIMIT ?", (after, limit+1)))
+            else:
+                rows = list(db.execute("SELECT sequence,ticket,conversation,kind,payload FROM audit WHERE ticket=? AND sequence>? ORDER BY sequence LIMIT ?", (ticket_id, after, limit+1)))
         return {"items": [{"sequence": r[0], "ticket_id": r[1], "conversation": r[2], "kind": r[3], "payload": json.loads(r[4])} for r in rows[:limit]],
                 "next_cursor": rows[limit-1][0] if len(rows)>limit else None}
 

@@ -634,3 +634,10 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(self.cli("redact", ticket, "--confirm-ticket", "wrong")[0], 1)
         self.assertEqual(self.cli("redact", ticket, "--confirm-ticket", ticket)[0], 0)
         self.assertEqual(self.core.ticket(ticket)["context"], [])
+
+    def test_audit_ticket_cursor_has_a_covering_lookup_index(self):
+        ticket = self.accepted()
+        with closing(sqlite3.connect(self.path)) as db, db:
+            plan = str(db.execute("EXPLAIN QUERY PLAN SELECT sequence FROM audit WHERE ticket=? AND sequence>? ORDER BY sequence", (ticket,0)).fetchall())
+        self.assertIn("audit_ticket_sequence", plan)
+        self.assertEqual(len(self.core.audit_page(ticket_id=ticket)["items"]), 3)
