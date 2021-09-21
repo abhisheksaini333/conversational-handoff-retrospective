@@ -641,3 +641,14 @@ class PatchContracts(unittest.TestCase):
             plan = str(db.execute("EXPLAIN QUERY PLAN SELECT sequence FROM audit WHERE ticket=? AND sequence>? ORDER BY sequence", (ticket,0)).fetchall())
         self.assertIn("audit_ticket_sequence", plan)
         self.assertEqual(len(self.core.audit_page(ticket_id=ticket)["items"]), 3)
+
+    def test_operator_state_survives_restart(self):
+        ticket = self.accepted()
+        self.core.claim(ticket, "claim", "agent")
+        self.core.set_priority(ticket, "priority", "urgent")
+        self.core.add_note(ticket, "note", "agent", "Follow up")
+        before = self.core.ticket(ticket)
+        audit = self.core.audit_page(ticket_id=ticket)
+        restored = Coordinator(self.path)
+        self.assertEqual(restored.ticket(ticket), before)
+        self.assertEqual(restored.audit_page(ticket_id=ticket), audit)
