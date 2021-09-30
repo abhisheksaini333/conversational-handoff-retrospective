@@ -652,3 +652,14 @@ class PatchContracts(unittest.TestCase):
         restored = Coordinator(self.path)
         self.assertEqual(restored.ticket(ticket), before)
         self.assertEqual(restored.audit_page(ticket_id=ticket), audit)
+
+    def test_concurrent_claims_have_exactly_one_winner(self):
+        ticket = self.accepted()
+        def claim(actor):
+            try: return self.core.claim(ticket, "claim-"+actor, actor)["assignee"]
+            except ValueError: return None
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as pool:
+            results = list(pool.map(claim, ["one", "two"]))
+        winners = [x for x in results if x is not None]
+        self.assertEqual(len(winners), 1)
+        self.assertEqual(self.core.ticket(ticket)["assignee"], winners[0])
