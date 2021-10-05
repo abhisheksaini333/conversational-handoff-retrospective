@@ -663,3 +663,14 @@ class PatchContracts(unittest.TestCase):
         winners = [x for x in results if x is not None]
         self.assertEqual(len(winners), 1)
         self.assertEqual(self.core.ticket(ticket)["assignee"], winners[0])
+
+    def test_cancellation_during_dispatch_cannot_restore_human_ownership(self):
+        ticket = self.request()["ticket_id"]
+        core = self.core
+        class RacingDesk:
+            def accept(self, value):
+                core.cancel(value["id"], "cancel", "withdrawn")
+                return {"accepted": True, "ticket_id": value["id"]}
+        result = self.core.dispatch(ticket, RacingDesk())
+        self.assertEqual(result["state"], "bot")
+        self.assertEqual(self.core.ticket(ticket)["state"], "cancelled")
