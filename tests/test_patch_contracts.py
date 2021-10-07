@@ -674,3 +674,13 @@ class PatchContracts(unittest.TestCase):
         result = self.core.dispatch(ticket, RacingDesk())
         self.assertEqual(result["state"], "bot")
         self.assertEqual(self.core.ticket(ticket)["state"], "cancelled")
+
+    def test_resume_failure_leaves_no_partial_completion(self):
+        ticket = self.accepted()
+        audit = self.core.audit_page(ticket_id=ticket)
+        counts = self.core.snapshot_counts()
+        def failure(_): raise TimeoutError("uncertain response")
+        with self.assertRaises(TimeoutError): self.core.complete(ticket, "done", failure)
+        self.assertEqual(self.core.snapshot_counts(), counts)
+        self.assertEqual(self.core.audit_page(ticket_id=ticket), audit)
+        self.assertEqual(Coordinator(self.path).ticket(ticket)["state"], "human")
