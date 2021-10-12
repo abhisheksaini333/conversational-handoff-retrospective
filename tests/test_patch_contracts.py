@@ -684,3 +684,14 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(self.core.snapshot_counts(), counts)
         self.assertEqual(self.core.audit_page(ticket_id=ticket), audit)
         self.assertEqual(Coordinator(self.path).ticket(ticket)["state"], "human")
+
+    def test_restored_backup_preserves_message_replay(self):
+        original = self.request()
+        self.core.dispatch(original["ticket_id"], Desk())
+        destination = Path(self.temp.name) / "restore.db"
+        self.core.backup(destination)
+        restored = Coordinator(str(destination))
+        replay = restored.message("c1", "e1", "help", "request_human", .9)
+        self.assertEqual(replay, original)
+        self.assertEqual(len(restored.tickets()), 1)
+        self.assertEqual(restored.conversation("c1")["state"], "human")
