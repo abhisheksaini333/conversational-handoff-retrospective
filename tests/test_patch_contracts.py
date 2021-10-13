@@ -695,3 +695,12 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(replay, original)
         self.assertEqual(len(restored.tickets()), 1)
         self.assertEqual(restored.conversation("c1")["state"], "human")
+
+    def test_metadata_replay_returns_its_original_revision(self):
+        ticket = self.request()["ticket_id"]
+        first = self.core.set_priority(ticket, "first", "low")
+        self.core.set_priority(ticket, "second", "urgent")
+        self.assertEqual(self.core.set_priority(ticket, "first", "low"), first)
+        self.assertEqual(self.core.ticket(ticket)["priority"], "urgent")
+        first["priority"] = "corrupted outside"
+        self.assertEqual(self.core.set_priority(ticket, "first", "low")["priority"], "low")
