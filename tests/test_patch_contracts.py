@@ -704,3 +704,11 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(self.core.ticket(ticket)["priority"], "urgent")
         first["priority"] = "corrupted outside"
         self.assertEqual(self.core.set_priority(ticket, "first", "low")["priority"], "low")
+
+    def test_old_cancellation_replay_does_not_clear_new_ticket(self):
+        old = self.request()["ticket_id"]
+        receipt = self.core.cancel(old, "cancel", "withdrawn")
+        newer = self.request(event="new")["ticket_id"]
+        self.assertEqual(self.core.cancel(old, "cancel", "withdrawn"), receipt)
+        self.assertEqual(self.core.conversation("c1")["ticket_id"], newer)
+        self.assertEqual(self.core.ticket(newer)["state"], "pending")
