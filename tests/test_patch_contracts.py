@@ -712,3 +712,17 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(self.core.cancel(old, "cancel", "withdrawn"), receipt)
         self.assertEqual(self.core.conversation("c1")["ticket_id"], newer)
         self.assertEqual(self.core.ticket(newer)["state"], "pending")
+
+    def test_configured_body_budget_enforced_over_http(self):
+        import http.client, threading
+        from handoff.server import make_server
+        server = make_server(self.core, "local-test-credential", port=0, body_limit=16)
+        thread = threading.Thread(target=lambda: server.serve_forever(poll_interval=.01), daemon=True); thread.start()
+        client = http.client.HTTPConnection(*server.server_address, timeout=2)
+        try:
+            client.request("POST", "/handoffs", json.dumps(self.payload()), {"Authorization":"Bearer local-test-credential", "Content-Type":"application/json"})
+            response = client.getresponse(); response.read()
+            self.assertEqual(response.status, 413)
+            self.assertEqual(self.core.snapshot_counts()["tickets"], 0)
+        finally:
+            client.close(); server.shutdown(); server.server_close(); thread.join()
