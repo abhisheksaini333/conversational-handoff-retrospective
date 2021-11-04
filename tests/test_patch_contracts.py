@@ -517,7 +517,7 @@ class PatchContracts(unittest.TestCase):
     def test_unknown_post_route_is_404_without_a_body(self):
         self.assertEqual(self.http("/unknown", method="POST")[0], 404)
 
-    def test_rasa_redirect_is_not_followed(self):
+    def assert_rasa_redirect_blocked(self, redirect_status):
         import threading
         from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
         from handoff.server import make_server
@@ -527,7 +527,7 @@ class PatchContracts(unittest.TestCase):
             def log_message(self, *args): pass
             def do_POST(self):
                 type(self).visits += 1
-                self.send_response(307); self.send_header("Location", "/stolen"); self.end_headers()
+                self.send_response(redirect_status); self.send_header("Location", "/stolen"); self.end_headers()
             def do_GET(self):
                 type(self).visits += 1
                 self.send_response(200); self.end_headers()
@@ -726,3 +726,11 @@ class PatchContracts(unittest.TestCase):
             self.assertEqual(self.core.snapshot_counts()["tickets"], 0)
         finally:
             client.close(); server.shutdown(); server.server_close(); thread.join()
+
+    def test_rasa_redirect_is_not_followed(self):
+        self.assert_rasa_redirect_blocked(307)
+
+    def test_all_redirect_response_families_are_rejected(self):
+        for status in [301, 302, 303, 307, 308]:
+            with self.subTest(status=status):
+                self.assert_rasa_redirect_blocked(status)
