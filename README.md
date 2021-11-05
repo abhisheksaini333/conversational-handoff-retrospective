@@ -36,6 +36,10 @@ The demo checks an interrupted order form, acknowledged escalation, pause across
 
 SQLite transactions protect ticket creation and receipts across process restarts. A separate persistent SQL tracker store protects Rasa's pause, slots and dialogue events. Session expiry is disabled; an explicit restart checks ownership before resetting the conversation. The synthetic desk also persists its acceptance by ticket ID. External resume delivery is **at least once**, not a distributed exactly-once guarantee. See [the architecture decision](docs/architecture.md) for boundaries and tradeoffs.
 
+## Support operations
+
+The [operator guide](docs/operator-guide.md) covers ticket queries, audit inspection, assignment commands, cancellation, queue retries, verified backups, exports and closed-ticket transcript redaction. These capabilities remain within the local synthetic service.
+
 ## Versions and attribution
 
 - Rasa **2.8.14**, uploaded **18 November 2021**, and bundled Rasa SDK **2.8.2**, uploaded **2 September 2021**. [Rasa package record](https://pypi.org/project/rasa/2.8.14/), [SDK record](https://pypi.org/project/rasa-sdk/2.8.2/).
