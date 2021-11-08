@@ -734,3 +734,16 @@ class PatchContracts(unittest.TestCase):
         for status in [301, 302, 303, 307, 308]:
             with self.subTest(status=status):
                 self.assert_rasa_redirect_blocked(status)
+
+    def test_redaction_clears_the_simulated_desk_payload(self):
+        from handoff.server import SimulatedDesk
+        desk = SimulatedDesk(self.path)
+        ticket = self.request()["ticket_id"]
+        self.core.dispatch(ticket, desk)
+        self.core.complete(ticket, "done")
+        self.core.redact_ticket(ticket)
+        with closing(sqlite3.connect(self.path)) as db, db:
+            payload = json.loads(db.execute("SELECT payload FROM desk_tickets WHERE id=?", (ticket,)).fetchone()[0])
+        self.assertEqual(payload["context"], [])
+        self.assertTrue(payload["redacted"])
+        self.assertEqual(desk.accept(self.core.ticket(ticket))["ticket_id"], ticket)

@@ -33,7 +33,7 @@ Use `POST /tickets/{id}/{operation}` with UTF-8 JSON. Supply `event_id` for repl
 
 Assignment never changes bot/human ownership. A late desk acknowledgement cannot revive a cancelled ticket.
 
-`POST /tickets/{id}/redact` instead requires `{"confirm_ticket_id":"same-id"}` and a closed ticket. It clears transcript, notes and cancellation text from that ticket and its metadata-replay results, preserving identities, fingerprints and audit records. It clears conversation context only for the newest ticket when the bot owns the conversation. Backups, exports and the separate Rasa tracker are not redacted by this operation.
+`POST /tickets/{id}/redact` instead requires `{"confirm_ticket_id":"same-id"}` and a closed ticket. It clears transcript, notes and cancellation text from that ticket, its simulated-desk copy and its metadata-replay results, preserving identities, fingerprints and audit records. It clears conversation context only for the newest ticket when the bot owns the conversation. Backups, exports and the separate Rasa tracker are not redacted by this operation.
 
 ## Local CLI
 

@@ -443,6 +443,13 @@ class Coordinator:
                 raise KeyError("ticket not found")
             if ticket["state"] not in ("completed", "cancelled"):
                 raise ValueError("active transcripts cannot be redacted")
+            if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='desk_tickets'").fetchone():
+                stored = db.execute("SELECT payload FROM desk_tickets WHERE id=?", (ticket_id,)).fetchone()
+                if stored:
+                    payload = json.loads(stored[0])
+                    payload.update(context=[], notes=[], redacted=True)
+                    payload.pop("cancellation_reason", None)
+                    db.execute("UPDATE desk_tickets SET payload=? WHERE id=?", (canonical(payload), ticket_id))
             ticket.update(context=[], notes=[], redacted=True)
             ticket.pop("cancellation_reason", None)
             self._put(db, "tickets", ticket_id, ticket)
