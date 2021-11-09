@@ -113,7 +113,7 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
             parsed = urllib.parse.urlsplit(self.path)
             if parsed.scheme or parsed.netloc or parsed.fragment or re.search(r"%(?![0-9a-fA-F]{2})", parsed.path):
                 raise ValueError("invalid request target")
-            values = urllib.parse.parse_qs(parsed.query, keep_blank_values=True, strict_parsing=True)
+            values = urllib.parse.parse_qs(parsed.query, keep_blank_values=True, strict_parsing=True) if parsed.query else {}
             if any(len(value) != 1 for value in values.values()):
                 raise ValueError("duplicate query parameter")
             self.query = {key: value[0] for key, value in values.items()}

@@ -753,3 +753,15 @@ class PatchContracts(unittest.TestCase):
             db.execute("DROP TABLE audit")
         self.assertEqual(self.http("/ready", method="GET")[0], 503)
         self.assertEqual(self.http("/health", method="GET")[0], 200)
+
+    def test_empty_query_does_not_depend_on_parse_qs_version_behavior(self):
+        import urllib.parse
+        from unittest.mock import patch
+        native = urllib.parse.parse_qs
+        def legacy(query, **options):
+            if query == "" and options.get("strict_parsing"):
+                raise ValueError("bad query field")
+            return native(query, **options)
+        with patch("handoff.server.urllib.parse.parse_qs", side_effect=legacy):
+            self.assertEqual(self.http("/health?", method="GET")[0], 200)
+            self.assertEqual(self.http("/tickets", method="GET")[0], 200)
