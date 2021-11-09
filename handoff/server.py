@@ -132,6 +132,7 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                         db.execute('SELECT id FROM conversations LIMIT 1').fetchone()
                         db.execute('SELECT id FROM tickets LIMIT 1').fetchone()
                         db.execute('SELECT event FROM receipts LIMIT 1').fetchone()
+                        db.execute('SELECT sequence FROM audit LIMIT 1').fetchone()
                     self.reply(200, {'status':'ready'})
                 except sqlite3.Error:
                     self.reply(503, {'status':'unavailable'})

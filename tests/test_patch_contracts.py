@@ -747,3 +747,9 @@ class PatchContracts(unittest.TestCase):
         self.assertEqual(payload["context"], [])
         self.assertTrue(payload["redacted"])
         self.assertEqual(desk.accept(self.core.ticket(ticket))["ticket_id"], ticket)
+
+    def test_readiness_fails_if_ticket_auditing_is_unavailable(self):
+        with closing(sqlite3.connect(self.path)) as db, db:
+            db.execute("DROP TABLE audit")
+        self.assertEqual(self.http("/ready", method="GET")[0], 503)
+        self.assertEqual(self.http("/health", method="GET")[0], 200)
