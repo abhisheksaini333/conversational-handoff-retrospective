@@ -765,3 +765,5 @@ class PatchContracts(unittest.TestCase):
         with patch("handoff.server.urllib.parse.parse_qs", side_effect=legacy):
             self.assertEqual(self.http("/health?", method="GET")[0], 200)
             self.assertEqual(self.http("/tickets", method="GET")[0], 200)
+
+

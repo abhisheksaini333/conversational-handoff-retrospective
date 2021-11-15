@@ -6,6 +6,7 @@ import math
 import os
 import re
 import sqlite3
+import socket
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -232,7 +233,7 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                     self.reply(413,{'error':'body must be between 1 and '+str(body_limit)+' bytes'});return
                 try:
                     raw = self.rfile.read(length)
-                except TimeoutError:
+                except (TimeoutError, socket.timeout):
                     self.reply(408, {"error":"request body timed out"}); return
                 if len(raw) != length:
                     self.reply(400, {"error":"truncated request body"}); return
