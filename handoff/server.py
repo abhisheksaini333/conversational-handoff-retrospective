@@ -33,7 +33,13 @@ class SimulatedDesk:
         if not self.available:
             raise ConnectionError('simulated desk unavailable')
         with closing(sqlite3.connect(self.database)) as db, db:
-            db.execute('INSERT OR IGNORE INTO desk_tickets VALUES (?,?)',(ticket['id'],canonical(ticket)))
+            # Serialize with retention and read current durable state. A delayed
+            # request must never restore a payload captured before redaction.
+            db.execute('BEGIN IMMEDIATE')
+            current = Coordinator._get(db, 'tickets', ticket['id'])
+            if current is None:
+                raise ValueError('ticket not found')
+            db.execute('INSERT OR IGNORE INTO desk_tickets VALUES (?,?)',(ticket['id'],canonical(current)))
         return {'accepted':True,'ticket_id':ticket['id']}
 
 

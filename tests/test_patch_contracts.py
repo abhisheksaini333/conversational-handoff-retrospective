@@ -767,3 +767,31 @@ class PatchContracts(unittest.TestCase):
             self.assertEqual(self.http("/tickets", method="GET")[0], 200)
 
 
+
+    def test_delayed_desk_delivery_cannot_restore_redacted_transcript(self):
+        import threading
+        from handoff.server import SimulatedDesk
+        started, release = threading.Event(), threading.Event()
+        class Delayed(SimulatedDesk):
+            def accept(self, ticket):
+                started.set()
+                if not release.wait(2):
+                    raise RuntimeError("test delivery was not released")
+                return super().accept(ticket)
+        desk = Delayed(self.path)
+        ticket = self.core.message("race", "message", "private text", "request_human", .9)["ticket_id"]
+        with concurrent.futures.ThreadPoolExecutor(1) as pool:
+            pending = pool.submit(self.core.dispatch, ticket, desk)
+            self.assertTrue(started.wait(2))
+            try:
+                self.core.cancel(ticket, "cancel", "private reason")
+                self.core.redact_ticket(ticket)
+            finally:
+                release.set()
+            self.assertEqual(pending.result(2)["state"], "bot")
+        with closing(sqlite3.connect(self.path)) as db:
+            payload = json.loads(db.execute("SELECT payload FROM desk_tickets WHERE id=?", (ticket,)).fetchone()[0])
+        self.assertEqual(payload["context"], [])
+        self.assertTrue(payload["redacted"])
+        self.assertNotIn("private", json.dumps(payload))
+
