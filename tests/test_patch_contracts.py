@@ -795,3 +795,10 @@ class PatchContracts(unittest.TestCase):
         self.assertTrue(payload["redacted"])
         self.assertNotIn("private", json.dumps(payload))
 
+
+    def test_utf16_body_cannot_masquerade_as_utf8_json(self):
+        from handoff.http_contracts import strict_json
+        with self.assertRaises((ValueError, UnicodeError)):
+            strict_json('{"available":false}'.encode("utf-16"))
+        self.assertEqual(strict_json('{"label":"café"}'.encode("utf-8")), {"label":"café"})
+
