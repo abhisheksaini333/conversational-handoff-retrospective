@@ -802,3 +802,20 @@ class PatchContracts(unittest.TestCase):
             strict_json('{"available":false}'.encode("utf-16"))
         self.assertEqual(strict_json('{"label":"café"}'.encode("utf-8")), {"label":"café"})
 
+
+    def test_corrupt_ticket_lists_fail_as_storage_errors(self):
+        ticket = self.request()["ticket_id"]
+        for payload in ["[]", "{broken", json.dumps({"id":ticket,"state":"pending","context":[]}), json.dumps(dict(self.core.ticket(ticket), created_at="bad"))]:
+            with closing(sqlite3.connect(self.path)) as db, db:
+                original = db.execute("SELECT data FROM tickets WHERE id=?", (ticket,)).fetchone()[0]
+                db.execute("UPDATE tickets SET data=? WHERE id=?", (payload,ticket))
+            try:
+                for operation in [self.core.tickets, self.core.ticket_page, self.core.queue_metrics, lambda:self.core.export_conversation("c1")]:
+                    with self.assertRaises(sqlite3.DatabaseError):
+                        operation()
+                for route in ["/tickets", "/tickets/page", "/metrics", "/exports/c1"]:
+                    self.assertEqual(self.http(route, method="GET")[0], 503)
+            finally:
+                with closing(sqlite3.connect(self.path)) as db, db:
+                    db.execute("UPDATE tickets SET data=? WHERE id=?", (original,ticket))
+

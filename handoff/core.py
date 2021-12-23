@@ -58,11 +58,32 @@ class Coordinator:
         row = db.execute("SELECT data FROM " + table + " WHERE id=?", (key,)).fetchone()
         if not row:
             return None
+        return Coordinator._decode(table, key, row[0])
+
+    @staticmethod
+    def _decode(table, key, raw):
         try:
-            result = json.loads(row[0])
+            result = json.loads(raw)
             states = ("bot", "pending", "human") if table == "conversations" else ("pending", "human", "completed", "cancelled")
             if not isinstance(result, dict) or result.get("id") != key or result.get("state") not in states:
                 raise ValueError("invalid persisted state")
+            if not isinstance(result.get("context"), list) or len(result["context"]) > 20:
+                raise ValueError("invalid persisted context")
+            for item in result["context"]:
+                if not isinstance(item, dict) or item.get("role") not in ("user", "assistant") or not isinstance(item.get("text"), str):
+                    raise ValueError("invalid persisted message")
+            if result.get("form") is not None:
+                identifier(result["form"], "form")
+            if table == "tickets":
+                identifier(result.get("conversation"), "conversation")
+                if type(result.get("delivery_attempts")) is not int or result["delivery_attempts"] < 0:
+                    raise ValueError("invalid delivery count")
+                for name in ("created_at", "accepted_at", "completed_at", "cancelled_at"):
+                    value = result.get(name)
+                    if name in result and (type(value) not in (int, float) or not math.isfinite(value) or value < 0):
+                        raise ValueError("invalid lifecycle time")
+            elif result.get("ticket_id") is not None:
+                identifier(result["ticket_id"], "ticket_id")
             return result
         except (ValueError, TypeError) as error:
             raise sqlite3.DatabaseError("invalid persisted state") from error
@@ -104,7 +125,7 @@ class Coordinator:
 
     def tickets(self):
         with self._transaction(readonly=True) as db:
-            return [json.loads(row[0]) for row in db.execute("SELECT data FROM tickets ORDER BY rowid")]
+            return [self._decode("tickets", row[0], row[1]) for row in db.execute("SELECT id,data FROM tickets ORDER BY rowid")]
 
     def message(self, conversation, event_id, text, intent, confidence, active_form=None, context=None):
         identifier(conversation, "conversation")
@@ -211,13 +232,13 @@ class Coordinator:
             identifier(conversation, "conversation")
         rows = []
         with self._transaction(readonly=True) as db:
-            for row in db.execute("SELECT rowid,data FROM tickets WHERE rowid>? ORDER BY rowid", (after,)):
-                ticket = json.loads(row[1])
+            for row in db.execute("SELECT rowid,id,data FROM tickets WHERE rowid>? ORDER BY rowid", (after,)):
+                ticket = self._decode("tickets", row[1], row[2])
                 if all(value is None or ticket.get(key) == value for key, value in (("state", state), ("conversation", conversation), ("reason", reason))):
-                    rows.append(row)
+                    rows.append((row[0], ticket))
                     if len(rows) > limit:
                         break
-        return {"items": [json.loads(row[1]) for row in rows[:limit]],
+        return {"items": [row[1] for row in rows[:limit]],
                 "next_cursor": rows[limit-1][0] if len(rows)>limit else None}
 
     def ticket_summary(self, ticket_id):
@@ -289,7 +310,7 @@ class Coordinator:
             state = self._get(db, "conversations", conversation)
             if state is None:
                 raise KeyError("conversation not found")
-            tickets = [json.loads(row[0]) for row in db.execute("SELECT data FROM tickets ORDER BY rowid")]
+            tickets = [self._decode("tickets", row[0], row[1]) for row in db.execute("SELECT id,data FROM tickets ORDER BY rowid")]
             return {"version": 1, "conversation": state,
                     "tickets": [t for t in tickets if t["conversation"] == conversation]}
 
@@ -454,7 +475,7 @@ class Coordinator:
             ticket.pop("cancellation_reason", None)
             self._put(db, "tickets", ticket_id, ticket)
             state = self._get(db, "conversations", ticket["conversation"])
-            related = [json.loads(row[0]) for row in db.execute("SELECT data FROM tickets ORDER BY rowid")]
+            related = [self._decode("tickets", row[0], row[1]) for row in db.execute("SELECT id,data FROM tickets ORDER BY rowid")]
             newest = next((t["id"] for t in reversed(related) if t["conversation"] == ticket["conversation"]), None)
             if newest == ticket_id and state and state["state"] == "bot" and state["ticket_id"] is None:
                 state["context"] = []
