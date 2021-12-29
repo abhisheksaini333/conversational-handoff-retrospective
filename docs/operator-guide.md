@@ -53,7 +53,7 @@ Backup/export destinations must not exist and are created with owner-only permis
 
 ## Transport and storage
 
-Mutation bodies require a decimal `Content-Length`. Transfer encoding, ambiguous headers, duplicate JSON keys, nonfinite JSON values and unsupported content types are rejected. Read deadlines bound slow clients. Callback redirects are disabled; failed callbacks preserve human ownership. Temporary 503 responses include `Retry-After: 1`.
+Mutation bodies require a decimal `Content-Length`. Transfer encoding, ambiguous headers, duplicate JSON keys, nonfinite JSON values and unsupported content types are rejected. A total body-read deadline bounds trickling clients; request headers also have a socket inactivity timeout. Callback redirects are disabled; failed callbacks preserve human ownership. Temporary 503 responses include `Retry-After: 1`.
 
 `make_server` accepts `request_timeout` (default 5 seconds), `resume_timeout` (default 3 seconds) and `body_limit` (default 65,536 bytes). Timeouts must be positive and at most 30 seconds; size limits are 1–1,048,576 bytes. `Coordinator` accepts `busy_timeout` (default 10 seconds, maximum 60) and an injectable clock for deterministic tests. Read-only queries do not reserve SQLite's writer lock.
 

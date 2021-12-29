@@ -819,3 +819,29 @@ class PatchContracts(unittest.TestCase):
                 with closing(sqlite3.connect(self.path)) as db, db:
                     db.execute("UPDATE tickets SET data=? WHERE id=?", (original,ticket))
 
+
+    def test_trickling_body_cannot_extend_total_read_deadline(self):
+        import socket, threading, time
+        from handoff.server import make_server
+        server = make_server(self.core, "local-test-credential", port=0, request_timeout=.12)
+        thread = threading.Thread(target=lambda:server.serve_forever(poll_interval=.01), daemon=True)
+        thread.start()
+        try:
+            with socket.create_connection(server.server_address, timeout=2) as connection:
+                body = b'{"available":false}'
+                connection.sendall(("POST /demo/desk HTTP/1.0\r\nAuthorization: Bearer local-test-credential\r\nContent-Type: application/json\r\nContent-Length: "+str(len(body))+"\r\n\r\n").encode())
+                def trickle():
+                    try:
+                        for value in body:
+                            connection.sendall(bytes([value]));time.sleep(.035)
+                    except OSError:
+                        pass
+                writer = threading.Thread(target=trickle,daemon=True);writer.start()
+                start = time.monotonic()
+                response = connection.recv(4096)
+                self.assertIn(b"408", response.split(b"\r\n")[0])
+                self.assertLess(time.monotonic()-start, .6)
+                connection.close()
+                writer.join(1)
+        finally:
+            server.shutdown();server.server_close();thread.join(1)

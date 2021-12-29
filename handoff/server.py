@@ -7,6 +7,7 @@ import os
 import re
 import sqlite3
 import socket
+import time
 import urllib.error
 import urllib.parse
 import urllib.request
@@ -238,7 +239,20 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                 if not 0<length<=body_limit:
                     self.reply(413,{'error':'body must be between 1 and '+str(body_limit)+' bytes'});return
                 try:
-                    raw = self.rfile.read(length)
+                    deadline = time.monotonic() + request_timeout
+                    parts, remaining = [], length
+                    while remaining:
+                        budget = deadline - time.monotonic()
+                        if budget <= 0:
+                            raise TimeoutError("body deadline exceeded")
+                        self.connection.settimeout(budget)
+                        part = self.rfile.read1(remaining)
+                        if not part:
+                            break
+                        parts.append(part)
+                        remaining -= len(part)
+                    raw = b"".join(parts)
+                    self.connection.settimeout(request_timeout)
                 except (TimeoutError, socket.timeout):
                     self.reply(408, {"error":"request body timed out"}); return
                 if len(raw) != length:
