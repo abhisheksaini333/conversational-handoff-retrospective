@@ -845,3 +845,19 @@ class PatchContracts(unittest.TestCase):
                 writer.join(1)
         finally:
             server.shutdown();server.server_close();thread.join(1)
+
+    def test_stored_metadata_types_fail_closed_before_consumption(self):
+        ticket = self.request()["ticket_id"]
+        original = self.core.ticket(ticket)
+        cases = [("reason", []), ("priority", []), ("revision", True), ("tags", "tag"), ("notes", {}), ("notes", [{"id":"n","actor":"a","text":[]}]), ("assignee", []), ("redacted", 1)]
+        for field, value in cases:
+            with self.subTest(field=field,value=value):
+                broken = dict(original, **{field:value})
+                with closing(sqlite3.connect(self.path)) as db, db:
+                    db.execute("UPDATE tickets SET data=? WHERE id=?", (json.dumps(broken),ticket))
+                for operation in [self.core.routing_metrics,self.core.pending_queue,lambda:self.core.ticket(ticket)]:
+                    with self.assertRaises(sqlite3.DatabaseError):
+                        operation()
+                self.assertEqual(self.http("/metrics",method="GET")[0],503)
+        with closing(sqlite3.connect(self.path)) as db, db:
+            db.execute("UPDATE tickets SET data=? WHERE id=?", (json.dumps(original),ticket))

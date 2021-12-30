@@ -78,6 +78,29 @@ class Coordinator:
                 identifier(result.get("conversation"), "conversation")
                 if type(result.get("delivery_attempts")) is not int or result["delivery_attempts"] < 0:
                     raise ValueError("invalid delivery count")
+                if "reason" in result and not isinstance(result["reason"], str):
+                    raise ValueError("invalid routing reason")
+                if "priority" in result and result["priority"] not in ("low", "normal", "high", "urgent"):
+                    raise ValueError("invalid stored priority")
+                if "revision" in result and (type(result["revision"]) is not int or result["revision"] < 0):
+                    raise ValueError("invalid stored revision")
+                if result.get("assignee") is not None:
+                    identifier(result["assignee"], "assignee")
+                if "redacted" in result and type(result["redacted"]) is not bool:
+                    raise ValueError("invalid redaction flag")
+                if "tags" in result and (not isinstance(result["tags"], list) or len(result["tags"]) > 10 or any(not isinstance(tag, str) or not tag.strip() or len(tag) > 32 for tag in result["tags"])):
+                    raise ValueError("invalid stored tags")
+                if "notes" in result:
+                    if not isinstance(result["notes"], list) or len(result["notes"]) > 100:
+                        raise ValueError("invalid stored notes")
+                    for note in result["notes"]:
+                        if not isinstance(note, dict) or not isinstance(note.get("text"), str) or len(note["text"]) > 2000:
+                            raise ValueError("invalid stored note")
+                        identifier(note.get("id"), "note ID")
+                        identifier(note.get("actor"), "note actor")
+                        timestamp = note.get("created_at")
+                        if type(timestamp) not in (int, float) or not math.isfinite(timestamp) or timestamp < 0:
+                            raise ValueError("invalid note timestamp")
                 for name in ("created_at", "accepted_at", "completed_at", "cancelled_at"):
                     value = result.get(name)
                     if name in result and (type(value) not in (int, float) or not math.isfinite(value) or value < 0):
