@@ -247,7 +247,7 @@ class Coordinator:
         return float(value)
 
     def ticket_page(self, limit=50, after=0, state=None, conversation=None, reason=None):
-        if type(limit) is not int or not 1 <= limit <= 100 or type(after) is not int or after < 0:
+        if type(limit) is not int or not 1 <= limit <= 100 or type(after) is not int or not 0 <= after <= 2**63-1:
             raise ValueError("limit must be 1..100 and cursor nonnegative")
         if state not in (None, "pending", "human", "completed", "cancelled") or reason not in (None, "explicit", "low_confidence"):
             raise ValueError("invalid ticket filter")
@@ -365,7 +365,7 @@ class Coordinator:
             return result
 
     def audit_page(self, limit=50, after=0, ticket_id=None):
-        if type(limit) is not int or not 1 <= limit <= 100 or type(after) is not int or after < 0:
+        if type(limit) is not int or not 1 <= limit <= 100 or type(after) is not int or not 0 <= after <= 2**63-1:
             raise ValueError("invalid audit cursor or limit")
         if ticket_id is not None:
             identifier(ticket_id, "ticket_id")
