@@ -8,6 +8,7 @@ import time
 import uuid
 import unicodedata
 from contextlib import contextmanager, closing
+from .http_contracts import strict_json
 
 
 def canonical(value):
@@ -63,7 +64,7 @@ class Coordinator:
     @staticmethod
     def _decode(table, key, raw):
         try:
-            result = json.loads(raw)
+            result = strict_json(raw)
             states = ("bot", "pending", "human") if table == "conversations" else ("pending", "human", "completed", "cancelled")
             if not isinstance(result, dict) or result.get("id") != key or result.get("state") not in states:
                 raise ValueError("invalid persisted state")

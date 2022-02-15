@@ -33,3 +33,10 @@ class MaintenanceTests(unittest.TestCase):
         for method in (self.core.ticket_page,self.core.audit_page):
             with self.assertRaises(ValueError): method(after=2**63)
             self.assertEqual(method(after=2**63-1)["items"],[])
+
+    def test_persisted_duplicate_fields_are_corruption(self):
+        ticket=self.ticket()
+        with sqlite3.connect(self.path) as db:
+            raw=db.execute("SELECT data FROM tickets WHERE id=?",(ticket,)).fetchone()[0]
+            db.execute("UPDATE tickets SET data=? WHERE id=?",(raw[:-1]+',"state":"pending"}',ticket))
+        with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)
