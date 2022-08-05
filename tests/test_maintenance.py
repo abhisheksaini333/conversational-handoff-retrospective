@@ -40,3 +40,10 @@ class MaintenanceTests(unittest.TestCase):
             raw=db.execute("SELECT data FROM tickets WHERE id=?",(ticket,)).fetchone()[0]
             db.execute("UPDATE tickets SET data=? WHERE id=?",(raw[:-1]+',"state":"pending"}',ticket))
         with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)
+
+    def test_persisted_context_obeys_input_bounds(self):
+        ticket=self.ticket()
+        self.corrupt(ticket,lambda t:t.update(context=[{"role":"user","text":"x"*2001}]))
+        with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)
+        self.corrupt(ticket,lambda t:t.update(context=[{"role":"user","text":"ok","extra":True}]))
+        with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)

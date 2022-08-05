@@ -71,7 +71,7 @@ class Coordinator:
             if not isinstance(result.get("context"), list) or len(result["context"]) > 20:
                 raise ValueError("invalid persisted context")
             for item in result["context"]:
-                if not isinstance(item, dict) or item.get("role") not in ("user", "assistant") or not isinstance(item.get("text"), str):
+                if not isinstance(item, dict) or set(item) != {"role", "text"} or item.get("role") not in ("user", "assistant") or not isinstance(item.get("text"), str) or len(item["text"]) > 2000:
                     raise ValueError("invalid persisted message")
             if result.get("form") is not None:
                 identifier(result["form"], "form")
