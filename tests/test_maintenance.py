@@ -47,3 +47,10 @@ class MaintenanceTests(unittest.TestCase):
         with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)
         self.corrupt(ticket,lambda t:t.update(context=[{"role":"user","text":"ok","extra":True}]))
         with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)
+
+    def test_lifecycle_timestamps_cannot_run_backwards(self):
+        ticket=self.ticket()
+        self.corrupt(ticket,lambda t:t.update(accepted_at=99))
+        with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)
+        self.corrupt(ticket,lambda t:t.update(accepted_at=110,completed_at=109))
+        with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)

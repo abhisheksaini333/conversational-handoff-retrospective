@@ -106,6 +106,9 @@ class Coordinator:
                     value = result.get(name)
                     if name in result and (type(value) not in (int, float) or not math.isfinite(value) or value < 0):
                         raise ValueError("invalid lifecycle time")
+                for earlier, later in (("created_at", "accepted_at"), ("created_at", "completed_at"), ("created_at", "cancelled_at"), ("accepted_at", "completed_at")):
+                    if earlier in result and later in result and result[earlier] > result[later]:
+                        raise ValueError("lifecycle timestamps are out of order")
             elif result.get("ticket_id") is not None:
                 identifier(result["ticket_id"], "ticket_id")
             return result
