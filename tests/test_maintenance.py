@@ -54,3 +54,9 @@ class MaintenanceTests(unittest.TestCase):
         with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)
         self.corrupt(ticket,lambda t:t.update(accepted_at=110,completed_at=109))
         with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)
+
+    def test_persisted_tags_are_unique_normalized_identifiers(self):
+        ticket=self.ticket()
+        for tags in (["vip","vip"],[" VIP "],["bad\x00tag"]):
+            self.corrupt(ticket,lambda t:t.update(tags=tags))
+            with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)

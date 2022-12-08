@@ -91,6 +91,11 @@ class Coordinator:
                     raise ValueError("invalid redaction flag")
                 if "tags" in result and (not isinstance(result["tags"], list) or len(result["tags"]) > 10 or any(not isinstance(tag, str) or not tag.strip() or len(tag) > 32 for tag in result["tags"])):
                     raise ValueError("invalid stored tags")
+                if "tags" in result:
+                    if len(set(result["tags"])) != len(result["tags"]) or any(tag != tag.strip().lower() for tag in result["tags"]):
+                        raise ValueError("invalid stored tag normalization")
+                    for tag in result["tags"]:
+                        identifier(tag, "tag")
                 if "notes" in result:
                     if not isinstance(result["notes"], list) or len(result["notes"]) > 100:
                         raise ValueError("invalid stored notes")
