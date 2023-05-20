@@ -60,3 +60,11 @@ class MaintenanceTests(unittest.TestCase):
         for tags in (["vip","vip"],[" VIP "],["bad\x00tag"]):
             self.corrupt(ticket,lambda t:t.update(tags=tags))
             with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)
+
+    def test_persisted_notes_require_unique_ids_and_content(self):
+        ticket=self.ticket()
+        note={"id":"note","actor":"agent","text":"ok","created_at":100}
+        self.corrupt(ticket,lambda t:t.update(notes=[note,note]))
+        with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)
+        self.corrupt(ticket,lambda t:t.update(notes=[{**note,"text":"   "}]))
+        with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)

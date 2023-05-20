@@ -99,10 +99,14 @@ class Coordinator:
                 if "notes" in result:
                     if not isinstance(result["notes"], list) or len(result["notes"]) > 100:
                         raise ValueError("invalid stored notes")
+                    note_ids = set()
                     for note in result["notes"]:
-                        if not isinstance(note, dict) or not isinstance(note.get("text"), str) or len(note["text"]) > 2000:
+                        if not isinstance(note, dict) or not isinstance(note.get("text"), str) or not note["text"].strip() or len(note["text"]) > 2000:
                             raise ValueError("invalid stored note")
                         identifier(note.get("id"), "note ID")
+                        if note["id"] in note_ids:
+                            raise ValueError("duplicate stored note ID")
+                        note_ids.add(note["id"])
                         identifier(note.get("actor"), "note actor")
                         timestamp = note.get("created_at")
                         if type(timestamp) not in (int, float) or not math.isfinite(timestamp) or timestamp < 0:
