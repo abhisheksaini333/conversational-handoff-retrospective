@@ -58,3 +58,5 @@ Mutation bodies require a decimal `Content-Length`. Transfer encoding, ambiguous
 `make_server` accepts `request_timeout` (default 5 seconds), `resume_timeout` (default 3 seconds) and `body_limit` (default 65,536 bytes). Timeouts must be positive and at most 30 seconds; size limits are 1–1,048,576 bytes. `Coordinator` accepts `busy_timeout` (default 10 seconds, maximum 60) and an injectable clock for deterministic tests. Read-only queries do not reserve SQLite's writer lock.
 
 `/health` reports process liveness. `/ready` reads coordinator tables; it does not establish that Rasa or another service is available. SQLite still serializes writers. Queue scans and retention previews remain local demo operations, not a scalable support platform.
+
+Integrity checks now validate persisted records and active conversation/ticket links as well as SQLite pages. Closed historical tickets remain valid when their conversation has a newer handoff.

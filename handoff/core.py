@@ -320,6 +320,20 @@ class Coordinator:
     def integrity(self):
         with self._transaction(readonly=True) as db:
             checks = [row[0] for row in db.execute("PRAGMA quick_check")]
+            try:
+                conversations = {row[0]: self._decode("conversations", *row) for row in db.execute("SELECT id,data FROM conversations")}
+                tickets = {row[0]: self._decode("tickets", *row) for row in db.execute("SELECT id,data FROM tickets")}
+                for conversation in conversations.values():
+                    active = conversation["state"] != "bot"
+                    ticket = tickets.get(conversation.get("ticket_id"))
+                    if (active and (ticket is None or ticket["conversation"] != conversation["id"] or ticket["state"] != conversation["state"])) or (not active and conversation.get("ticket_id") is not None):
+                        raise ValueError("invalid active ticket reference")
+                for ticket in tickets.values():
+                    conversation = conversations.get(ticket["conversation"])
+                    if conversation is None or (ticket["state"] in ("pending", "human") and conversation.get("ticket_id") != ticket["id"]):
+                        raise ValueError("orphan ticket")
+            except (ValueError, sqlite3.DatabaseError):
+                checks.append("logical coordinator state is inconsistent")
         return {"ok": checks == ["ok"], "checks": checks}
 
     def backup(self, destination):

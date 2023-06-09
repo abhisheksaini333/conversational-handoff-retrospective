@@ -68,3 +68,12 @@ class MaintenanceTests(unittest.TestCase):
         with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)
         self.corrupt(ticket,lambda t:t.update(notes=[{**note,"text":"   "}]))
         with self.assertRaises(sqlite3.DatabaseError): self.core.ticket(ticket)
+
+    def test_integrity_checks_records_and_active_references(self):
+        ticket=self.ticket()
+        self.corrupt(ticket,lambda t:t.update(conversation="missing"))
+        self.assertFalse(self.core.integrity()["ok"])
+        self.corrupt(ticket,lambda t:t.update(conversation="c1",state="completed"))
+        self.assertFalse(self.core.integrity()["ok"])
+        self.corrupt(ticket,lambda t:t.update(state="pending",context="invalid"))
+        self.assertFalse(self.core.integrity()["ok"])
