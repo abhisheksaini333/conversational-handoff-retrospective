@@ -401,8 +401,17 @@ class Coordinator:
                 rows = list(db.execute("SELECT sequence,ticket,conversation,kind,payload FROM audit WHERE sequence>? ORDER BY sequence LIMIT ?", (after, limit+1)))
             else:
                 rows = list(db.execute("SELECT sequence,ticket,conversation,kind,payload FROM audit WHERE ticket=? AND sequence>? ORDER BY sequence LIMIT ?", (ticket_id, after, limit+1)))
-        return {"items": [{"sequence": r[0], "ticket_id": r[1], "conversation": r[2], "kind": r[3], "payload": json.loads(r[4])} for r in rows[:limit]],
-                "next_cursor": rows[limit-1][0] if len(rows)>limit else None}
+        items = []
+        try:
+            for sequence, ticket, conversation, kind, raw in rows[:limit]:
+                payload = strict_json(raw)
+                identifier(ticket, "audit ticket"); identifier(conversation, "audit conversation")
+                if not isinstance(payload, dict) or payload.get("state") not in ("pending", "human", "completed", "cancelled") or type(payload.get("delivery_attempts")) is not int or payload["delivery_attempts"] < 0 or not isinstance(kind, str) or not kind:
+                    raise ValueError("invalid audit record")
+                items.append({"sequence": sequence, "ticket_id": ticket, "conversation": conversation, "kind": kind, "payload": payload})
+        except (ValueError, TypeError) as error:
+            raise sqlite3.DatabaseError("invalid persisted audit") from error
+        return {"items": items, "next_cursor": rows[limit-1][0] if len(rows)>limit else None}
 
     def audit_summary(self):
         with self._transaction(readonly=True) as db:

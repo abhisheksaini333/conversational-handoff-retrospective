@@ -77,3 +77,8 @@ class MaintenanceTests(unittest.TestCase):
         self.assertFalse(self.core.integrity()["ok"])
         self.corrupt(ticket,lambda t:t.update(state="pending",context="invalid"))
         self.assertFalse(self.core.integrity()["ok"])
+
+    def test_audit_reads_reject_corrupt_payloads(self):
+        ticket=self.ticket()
+        with sqlite3.connect(self.path) as db: db.execute("UPDATE audit SET payload=?",('[1]',))
+        with self.assertRaises(sqlite3.DatabaseError): self.core.audit_page(ticket_id=ticket)
