@@ -139,7 +139,18 @@ class Coordinator:
         if row:
             if row[0] != fingerprint:
                 raise ValueError("event ID was reused for different content")
-            return json.loads(row[1])
+            try:
+                result = strict_json(row[1])
+                if scope.startswith("metadata:"):
+                    return Coordinator._decode("tickets", scope[len("metadata:"):], row[1])
+                if not isinstance(result, dict) or result.get("state") not in ("bot", "pending", "human"):
+                    raise ValueError("invalid receipt state")
+                identifier(result.get("conversation"), "receipt conversation")
+                if result.get("ticket_id") is not None:
+                    identifier(result["ticket_id"], "receipt ticket")
+                return result
+            except (ValueError, TypeError) as error:
+                raise sqlite3.DatabaseError("invalid persisted receipt") from error
         return None
 
     @staticmethod

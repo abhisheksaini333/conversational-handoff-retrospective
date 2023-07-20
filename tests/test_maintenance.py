@@ -82,3 +82,8 @@ class MaintenanceTests(unittest.TestCase):
         ticket=self.ticket()
         with sqlite3.connect(self.path) as db: db.execute("UPDATE audit SET payload=?",('[1]',))
         with self.assertRaises(sqlite3.DatabaseError): self.core.audit_page(ticket_id=ticket)
+
+    def test_replay_rejects_corrupt_receipt_payload(self):
+        self.ticket()
+        with sqlite3.connect(self.path) as db: db.execute("UPDATE receipts SET result=?",('[]',))
+        with self.assertRaises(sqlite3.DatabaseError): self.ticket()
