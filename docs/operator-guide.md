@@ -60,3 +60,5 @@ Mutation bodies require a decimal `Content-Length`. Transfer encoding, ambiguous
 `/health` reports process liveness. `/ready` reads coordinator tables; it does not establish that Rasa or another service is available. SQLite still serializes writers. Queue scans and retention previews remain local demo operations, not a scalable support platform.
 
 Integrity checks now validate persisted records and active conversation/ticket links as well as SQLite pages. Closed historical tickets remain valid when their conversation has a newer handoff.
+
+Ticket summaries include priority, revision, assignee and cancellation time. Free-text cancellation reasons, notes and transcripts remain excluded.

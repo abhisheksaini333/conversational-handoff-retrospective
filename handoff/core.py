@@ -290,7 +290,8 @@ class Coordinator:
 
     def ticket_summary(self, ticket_id):
         ticket = self.ticket(ticket_id)
-        result = {key: ticket.get(key) for key in ("id", "conversation", "state", "reason", "delivery_attempts", "created_at", "accepted_at", "completed_at")}
+        result = {key: ticket.get(key) for key in ("id", "conversation", "state", "reason", "delivery_attempts", "created_at", "accepted_at", "completed_at", "cancelled_at", "assignee")}
+        result.update(priority=ticket.get("priority", "normal"), revision=ticket.get("revision", 0))
         result["context_messages"] = len(ticket.get("context", []))
         return result
 

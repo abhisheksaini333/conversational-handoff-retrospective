@@ -87,3 +87,13 @@ class MaintenanceTests(unittest.TestCase):
         self.ticket()
         with sqlite3.connect(self.path) as db: db.execute("UPDATE receipts SET result=?",('[]',))
         with self.assertRaises(sqlite3.DatabaseError): self.ticket()
+
+    def test_ticket_summary_has_operator_metadata_without_content(self):
+        ticket=self.ticket()
+        self.core.set_priority(ticket,"priority","high")
+        self.core.cancel(ticket,"cancel","private cancellation")
+        summary=self.core.ticket_summary(ticket)
+        self.assertEqual(summary["priority"],"high")
+        self.assertEqual(summary["revision"],1)
+        self.assertEqual(summary["cancelled_at"],100)
+        self.assertNotIn("private cancellation",json.dumps(summary))
