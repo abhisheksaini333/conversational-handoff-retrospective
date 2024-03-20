@@ -97,3 +97,11 @@ class MaintenanceTests(unittest.TestCase):
         self.assertEqual(summary["revision"],1)
         self.assertEqual(summary["cancelled_at"],100)
         self.assertNotIn("private cancellation",json.dumps(summary))
+
+    def test_queue_metrics_break_down_priorities(self):
+        ticket=self.ticket()
+        self.core.set_priority(ticket,"priority","urgent")
+        self.core.clock=lambda:125
+        metrics=self.core.queue_metrics()["by_priority"]
+        self.assertEqual(metrics["urgent"],{"pending":1,"oldest_seconds":25,"untimed":0})
+        self.assertEqual(metrics["normal"]["pending"],0)

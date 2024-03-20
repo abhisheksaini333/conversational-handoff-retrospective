@@ -305,7 +305,12 @@ class Coordinator:
         tickets = self.tickets()
         pending = [t for t in tickets if t["state"] == "pending"]
         ages = [max(0, now-t["created_at"]) for t in pending if "created_at" in t]
-        return {"pending": len(pending), "human": sum(t["state"] == "human" for t in tickets),
+        by_priority = {}
+        for priority in ("low", "normal", "high", "urgent"):
+            group = [t for t in pending if t.get("priority", "normal") == priority]
+            known = [max(0, now-t["created_at"]) for t in group if "created_at" in t]
+            by_priority[priority] = {"pending": len(group), "oldest_seconds": max(known) if known else None, "untimed": sum("created_at" not in t for t in group)}
+        return {"by_priority": by_priority, "pending": len(pending), "human": sum(t["state"] == "human" for t in tickets),
                 "oldest_pending_seconds": max(ages) if ages else None,
                 "untimed_pending": sum("created_at" not in t for t in pending)}
 

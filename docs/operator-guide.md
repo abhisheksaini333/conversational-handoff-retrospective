@@ -62,3 +62,5 @@ Mutation bodies require a decimal `Content-Length`. Transfer encoding, ambiguous
 Integrity checks now validate persisted records and active conversation/ticket links as well as SQLite pages. Closed historical tickets remain valid when their conversation has a newer handoff.
 
 Ticket summaries include priority, revision, assignee and cancellation time. Free-text cancellation reasons, notes and transcripts remain excluded.
+
+`/metrics` queue data includes `by_priority` with pending counts, oldest known wait in seconds and untimed legacy counts for every priority.
