@@ -64,3 +64,5 @@ Integrity checks now validate persisted records and active conversation/ticket l
 Ticket summaries include priority, revision, assignee and cancellation time. Free-text cancellation reasons, notes and transcripts remain excluded.
 
 `/metrics` queue data includes `by_priority` with pending counts, oldest known wait in seconds and untimed legacy counts for every priority.
+
+Authenticated `/metrics` includes `ownership`: assigned/unassigned human tickets and counts by operator identifier. Completed tickets do not inflate active load.

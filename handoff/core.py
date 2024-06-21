@@ -314,6 +314,16 @@ class Coordinator:
                 "oldest_pending_seconds": max(ages) if ages else None,
                 "untimed_pending": sum("created_at" not in t for t in pending)}
 
+    def ownership_metrics(self):
+        human = [t for t in self.tickets() if t["state"] == "human"]
+        operators = {}
+        for ticket in human:
+            actor = ticket.get("assignee")
+            if actor is not None:
+                operators[actor] = operators.get(actor, 0) + 1
+        assigned = sum(operators.values())
+        return {"assigned": assigned, "unassigned": len(human)-assigned, "by_operator": dict(sorted(operators.items()))}
+
     def retry_metrics(self):
         attempts = [t.get("delivery_attempts", 0) for t in self.tickets()]
         return {"attempts": sum(attempts), "retried_tickets": sum(a > 1 for a in attempts),

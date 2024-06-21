@@ -105,3 +105,14 @@ class MaintenanceTests(unittest.TestCase):
         metrics=self.core.queue_metrics()["by_priority"]
         self.assertEqual(metrics["urgent"],{"pending":1,"oldest_seconds":25,"untimed":0})
         self.assertEqual(metrics["normal"]["pending"],0)
+
+    def test_ownership_metrics_include_only_active_human_tickets(self):
+        ticket=self.ticket()
+        class Desk:
+            def accept(self,value):return {"accepted":True,"ticket_id":value["id"]}
+        self.core.dispatch(ticket,Desk())
+        self.assertEqual(self.core.ownership_metrics(),{"assigned":0,"unassigned":1,"by_operator":{}})
+        self.core.claim(ticket,"claim","agent")
+        self.assertEqual(self.core.ownership_metrics(),{"assigned":1,"unassigned":0,"by_operator":{"agent":1}})
+        self.core.complete(ticket,"done")
+        self.assertEqual(self.core.ownership_metrics()["assigned"],0)
