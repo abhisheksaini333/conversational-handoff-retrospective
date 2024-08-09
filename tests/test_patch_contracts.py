@@ -224,7 +224,7 @@ class PatchContracts(unittest.TestCase):
         clock[0] = 15; self.core.dispatch(ticket, Desk())
         clock[0] = 23; self.core.complete(ticket, "done")
         metrics = self.core.resolution_metrics()
-        self.assertEqual(metrics, {"samples": 1, "mean_wait_seconds": 5.0, "mean_handling_seconds": 8.0})
+        self.assertEqual(metrics, {"samples": 1, "mean_wait_seconds": 5.0, "mean_handling_seconds": 8.0, "wait_seconds": {"p50": 5, "p95": 5}, "handling_seconds": {"p50": 8, "p95": 8}})
 
     def test_routing_metrics_distinguish_escalation_reasons(self):
         self.request()

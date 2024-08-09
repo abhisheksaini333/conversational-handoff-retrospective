@@ -331,9 +331,14 @@ class Coordinator:
 
     def resolution_metrics(self):
         samples = [t for t in self.tickets() if t["state"] == "completed" and all(k in t for k in ("created_at", "accepted_at", "completed_at"))]
+        def percentiles(values):
+            ordered = sorted(values)
+            return {name: ordered[math.ceil(len(ordered)*fraction)-1] if ordered else None for name, fraction in (("p50", .5), ("p95", .95))}
+        distribution = {"wait_seconds": percentiles([t["accepted_at"]-t["created_at"] for t in samples]),
+                        "handling_seconds": percentiles([t["completed_at"]-t["accepted_at"] for t in samples])}
         if not samples:
-            return {"samples": 0, "mean_wait_seconds": None, "mean_handling_seconds": None}
-        return {"samples": len(samples),
+            return {**distribution, "samples": 0, "mean_wait_seconds": None, "mean_handling_seconds": None}
+        return {**distribution, "samples": len(samples),
                 "mean_wait_seconds": sum(max(0, t["accepted_at"]-t["created_at"]) for t in samples)/len(samples),
                 "mean_handling_seconds": sum(max(0, t["completed_at"]-t["accepted_at"]) for t in samples)/len(samples)}
 

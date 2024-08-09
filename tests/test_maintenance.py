@@ -116,3 +116,8 @@ class MaintenanceTests(unittest.TestCase):
         self.assertEqual(self.core.ownership_metrics(),{"assigned":1,"unassigned":0,"by_operator":{"agent":1}})
         self.core.complete(ticket,"done")
         self.assertEqual(self.core.ownership_metrics()["assigned"],0)
+
+    def test_resolution_percentiles_use_nearest_rank(self):
+        self.assertIsNone(self.core.resolution_metrics()["wait_seconds"]["p95"])
+        self.complete()
+        self.assertEqual(self.core.resolution_metrics()["wait_seconds"],{"p50":0,"p95":0})

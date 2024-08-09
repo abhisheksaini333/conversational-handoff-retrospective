@@ -66,3 +66,5 @@ Ticket summaries include priority, revision, assignee and cancellation time. Fre
 `/metrics` queue data includes `by_priority` with pending counts, oldest known wait in seconds and untimed legacy counts for every priority.
 
 Authenticated `/metrics` includes `ownership`: assigned/unassigned human tickets and counts by operator identifier. Completed tickets do not inflate active load.
+
+Resolution metrics include nearest-rank p50/p95 wait and handling durations in seconds. Empty samples yield null percentiles; sample count remains explicit.
