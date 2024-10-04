@@ -342,6 +342,12 @@ class Coordinator:
                 "mean_wait_seconds": sum(max(0, t["accepted_at"]-t["created_at"]) for t in samples)/len(samples),
                 "mean_handling_seconds": sum(max(0, t["completed_at"]-t["accepted_at"]) for t in samples)/len(samples)}
 
+    def lifecycle_metrics(self):
+        counts = {state: 0 for state in ("pending", "human", "completed", "cancelled")}
+        for ticket in self.tickets():
+            counts[ticket["state"]] += 1
+        return counts
+
     def routing_metrics(self):
         result = {"explicit": 0, "low_confidence": 0, "unknown": 0}
         for ticket in self.tickets():

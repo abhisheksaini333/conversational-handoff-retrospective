@@ -121,3 +121,9 @@ class MaintenanceTests(unittest.TestCase):
         self.assertIsNone(self.core.resolution_metrics()["wait_seconds"]["p95"])
         self.complete()
         self.assertEqual(self.core.resolution_metrics()["wait_seconds"],{"p50":0,"p95":0})
+
+    def test_lifecycle_metrics_keep_cancellations_distinct(self):
+        ticket=self.ticket()
+        self.core.cancel(ticket,"cancel","withdrawn")
+        self.ticket("c2")
+        self.assertEqual(self.core.lifecycle_metrics(),{"pending":1,"human":0,"completed":0,"cancelled":1})

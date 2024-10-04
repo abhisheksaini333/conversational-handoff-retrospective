@@ -184,7 +184,7 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
                         self.reply(503, {'error':'storage unavailable'})
                 elif self.path == '/metrics':
                     try:
-                        self.reply(200, {'counts':core.snapshot_counts(), 'queue':core.queue_metrics(), 'delivery':core.retry_metrics(), 'resolution':core.resolution_metrics(), 'routing':core.routing_metrics(), 'ownership':core.ownership_metrics()})
+                        self.reply(200, {'counts':core.snapshot_counts(), 'queue':core.queue_metrics(), 'delivery':core.retry_metrics(), 'resolution':core.resolution_metrics(), 'routing':core.routing_metrics(), 'ownership':core.ownership_metrics(), 'lifecycle':core.lifecycle_metrics()})
                     except sqlite3.Error:
                         self.reply(503, {'error':'storage unavailable'})
                 elif self.path == '/tickets/page':
