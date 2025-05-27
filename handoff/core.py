@@ -549,9 +549,9 @@ class Coordinator:
     def retention_preview(self, before):
         if isinstance(before, bool) or not isinstance(before, (int, float)) or not math.isfinite(before) or before < 0:
             raise ValueError("retention cutoff must be finite nonnegative seconds")
-        tickets = [t for t in self.tickets() if t["state"] in ("completed", "cancelled") and t.get("completed_at", t.get("cancelled_at", float("inf"))) < before]
+        tickets = [t for t in self.tickets() if t["state"] in ("completed", "cancelled") and not t.get("redacted", False) and t.get("completed_at", t.get("cancelled_at", float("inf"))) < before]
         return {"before": before, "ticket_ids": [t["id"] for t in tickets],
-                "context_messages": sum(len(t.get("context", [])) for t in tickets)}
+                "context_messages": sum(len(t.get("context", [])) for t in tickets), "notes": sum(len(t.get("notes", [])) for t in tickets)}
 
     def redact_ticket(self, ticket_id):
         identifier(ticket_id, "ticket_id")

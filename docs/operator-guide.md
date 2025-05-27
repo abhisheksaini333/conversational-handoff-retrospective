@@ -70,3 +70,5 @@ Authenticated `/metrics` includes `ownership`: assigned/unassigned human tickets
 Resolution metrics include nearest-rank p50/p95 wait and handling durations in seconds. Empty samples yield null percentiles; sample count remains explicit.
 
 Authenticated `/metrics.lifecycle` reports all four ticket states, keeping cancelled requests separate from successful human resolutions.
+
+Retention previews skip already-redacted tickets and count notes alongside transcript messages. Preview remains read-only.

@@ -127,3 +127,9 @@ class MaintenanceTests(unittest.TestCase):
         self.core.cancel(ticket,"cancel","withdrawn")
         self.ticket("c2")
         self.assertEqual(self.core.lifecycle_metrics(),{"pending":1,"human":0,"completed":0,"cancelled":1})
+
+    def test_retention_preview_skips_already_redacted_tickets(self):
+        ticket=self.complete()
+        self.assertEqual(self.core.retention_preview(101)["notes"],0)
+        self.core.redact_ticket(ticket)
+        self.assertEqual(self.core.retention_preview(101)["ticket_ids"],[])
