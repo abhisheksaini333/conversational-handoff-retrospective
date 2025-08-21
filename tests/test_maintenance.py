@@ -133,3 +133,10 @@ class MaintenanceTests(unittest.TestCase):
         self.assertEqual(self.core.retention_preview(101)["notes"],0)
         self.core.redact_ticket(ticket)
         self.assertEqual(self.core.retention_preview(101)["ticket_ids"],[])
+
+    def test_redaction_reports_whether_it_changed_content(self):
+        ticket=self.complete()
+        self.assertTrue(self.core.redact_ticket(ticket)["changed"])
+        count=len(self.core.audit_page()["items"])
+        self.assertFalse(self.core.redact_ticket(ticket)["changed"])
+        self.assertEqual(len(self.core.audit_page()["items"]),count)

@@ -72,3 +72,5 @@ Resolution metrics include nearest-rank p50/p95 wait and handling durations in s
 Authenticated `/metrics.lifecycle` reports all four ticket states, keeping cancelled requests separate from successful human resolutions.
 
 Retention previews skip already-redacted tickets and count notes alongside transcript messages. Preview remains read-only.
+
+Redaction responses include `changed`; false means the ticket was already redacted. Repeating a completed redaction does not append an audit event.

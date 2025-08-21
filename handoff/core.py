@@ -561,6 +561,7 @@ class Coordinator:
                 raise KeyError("ticket not found")
             if ticket["state"] not in ("completed", "cancelled"):
                 raise ValueError("active transcripts cannot be redacted")
+            changed = not ticket.get("redacted", False)
             if db.execute("SELECT 1 FROM sqlite_master WHERE type='table' AND name='desk_tickets'").fetchone():
                 stored = db.execute("SELECT payload FROM desk_tickets WHERE id=?", (ticket_id,)).fetchone()
                 if stored:
@@ -584,4 +585,4 @@ class Coordinator:
                 receipt.update(context=[], notes=[], redacted=True)
                 receipt.pop("cancellation_reason", None)
                 db.execute("UPDATE receipts SET result=? WHERE scope=? AND event=?", (canonical(receipt), "metadata:"+ticket_id, event))
-            return {"ticket_id": ticket_id, "redacted": True}
+            return {"ticket_id": ticket_id, "redacted": True, "changed": changed}
