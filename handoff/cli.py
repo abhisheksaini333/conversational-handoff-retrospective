@@ -5,14 +5,16 @@ import os
 from pathlib import Path
 import sqlite3
 import sys
-from handoff.core import Coordinator
+from handoff.core import Coordinator, verify_export_bundle
+from handoff.http_contracts import strict_json
 
 
 def main(argv=None):
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('--database', required=True)
+    parser.add_argument('--database')
     commands = parser.add_subparsers(dest='command', required=True)
     commands.add_parser('status')
+    commands.add_parser('verify-export').add_argument('source')
     redact = commands.add_parser('redact')
     redact.add_argument('ticket')
     redact.add_argument('--confirm-ticket', required=True)
@@ -29,7 +31,11 @@ def main(argv=None):
     tickets.add_argument('--after', type=int, default=0)
     args = parser.parse_args(argv)
     try:
-        if not Path(args.database).is_file():
+        if args.command == 'verify-export':
+            result = verify_export_bundle(strict_json(Path(args.source).read_text()))
+            print(json.dumps(result, sort_keys=True))
+            return 0
+        if not args.database or not Path(args.database).is_file():
             raise ValueError('database file does not exist')
         core = Coordinator(args.database)
         if args.command == 'status':

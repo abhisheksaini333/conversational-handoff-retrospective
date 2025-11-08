@@ -15,6 +15,31 @@ def canonical(value):
     return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
 
 
+def verify_export_bundle(bundle):
+    if not isinstance(bundle, dict) or bundle.get("algorithm") != "sha256" or not isinstance(bundle.get("data"), dict):
+        raise ValueError("invalid export envelope")
+    data = bundle["data"]
+    if type(data.get("version")) is not int or data["version"] != 1 or not isinstance(data.get("conversation"), dict) or not isinstance(data.get("tickets"), list):
+        raise ValueError("invalid export schema")
+    if hashlib.sha256(canonical(data).encode()).hexdigest() != bundle.get("sha256"):
+        raise ValueError("export digest mismatch")
+    try:
+        conversation = Coordinator._decode("conversations", data["conversation"].get("id"), canonical(data["conversation"]))
+        identifier(conversation["id"], "conversation")
+        seen = set()
+        for ticket in data["tickets"]:
+            if not isinstance(ticket, dict):
+                raise ValueError("invalid exported ticket")
+            identifier(ticket.get("id"), "ticket")
+            Coordinator._decode("tickets", ticket["id"], canonical(ticket))
+            if ticket["id"] in seen or ticket["conversation"] != conversation["id"]:
+                raise ValueError("invalid exported ticket reference")
+            seen.add(ticket["id"])
+    except sqlite3.DatabaseError as error:
+        raise ValueError("invalid export records") from error
+    return {"verified": True, "sha256": bundle["sha256"], "tickets": len(data["tickets"])}
+
+
 def identifier(value, name):
     if not isinstance(value, str) or not value.strip() or len(value) > 128 or any(unicodedata.category(c).startswith("C") for c in value):
         raise ValueError(name + " must be a nonempty string of at most 128 characters")

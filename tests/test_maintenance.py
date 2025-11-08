@@ -140,3 +140,16 @@ class MaintenanceTests(unittest.TestCase):
         count=len(self.core.audit_page()["items"])
         self.assertFalse(self.core.redact_ticket(ticket)["changed"])
         self.assertEqual(len(self.core.audit_page()["items"]),count)
+
+    def test_export_can_be_verified_without_database(self):
+        from handoff.cli import main
+        self.ticket()
+        path=Path(self.temp.name)/"export.json"
+        bundle=self.core.export_bundle("c1")
+        path.write_text(json.dumps(bundle))
+        with contextlib.redirect_stdout(io.StringIO()):
+            self.assertEqual(main(["verify-export",str(path)]),0)
+        bundle["data"]["conversation"]["state"]="human"
+        path.write_text(json.dumps(bundle))
+        with contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main(["verify-export",str(path)]),1)
