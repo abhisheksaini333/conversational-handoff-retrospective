@@ -153,3 +153,11 @@ class MaintenanceTests(unittest.TestCase):
         path.write_text(json.dumps(bundle))
         with contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main(["verify-export",str(path)]),1)
+
+    def test_failed_cli_export_removes_partial_destination(self):
+        from handoff.cli import main
+        self.ticket()
+        destination=Path(self.temp.name)/"partial.json"
+        with patch("handoff.cli.json.dump",side_effect=OSError("disk full")),contextlib.redirect_stderr(io.StringIO()):
+            self.assertEqual(main(["--database",str(self.path),"export","c1",str(destination)]),1)
+        self.assertFalse(destination.exists())

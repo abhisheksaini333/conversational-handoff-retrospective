@@ -49,9 +49,14 @@ def main(argv=None):
         elif args.command == 'export':
             bundle = core.export_bundle(args.conversation)
             descriptor = os.open(args.destination, os.O_WRONLY | os.O_CREAT | os.O_EXCL, 0o600)
-            with os.fdopen(descriptor, 'w') as stream:
-                json.dump(bundle, stream, sort_keys=True, allow_nan=False)
-                stream.write('\n')
+            try:
+                with os.fdopen(descriptor, 'w') as stream:
+                    json.dump(bundle, stream, sort_keys=True, allow_nan=False)
+                    stream.write('\n')
+                    stream.flush(); os.fsync(stream.fileno())
+            except BaseException:
+                Path(args.destination).unlink(missing_ok=True)
+                raise
             result = {'path':args.destination, 'sha256':bundle['sha256']}
         elif args.command == 'retention':
             result = core.retention_preview(args.before)
