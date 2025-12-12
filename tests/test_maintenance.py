@@ -161,3 +161,13 @@ class MaintenanceTests(unittest.TestCase):
         with patch("handoff.cli.json.dump",side_effect=OSError("disk full")),contextlib.redirect_stderr(io.StringIO()):
             self.assertEqual(main(["--database",str(self.path),"export","c1",str(destination)]),1)
         self.assertFalse(destination.exists())
+
+    def test_cli_filters_ticket_routing_reason(self):
+        from handoff.cli import main
+        self.ticket()
+        self.core.message("low","low","help","greet",.1)
+        output=io.StringIO()
+        with contextlib.redirect_stdout(output):
+            self.assertEqual(main(["--database",str(self.path),"tickets","--reason","low_confidence"]),0)
+        self.assertEqual(len(json.loads(output.getvalue())["items"]),1)
+        self.assertEqual(json.loads(output.getvalue())["items"][0]["conversation"],"low")

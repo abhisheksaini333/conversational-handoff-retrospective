@@ -27,6 +27,7 @@ def main(argv=None):
     tickets = commands.add_parser('tickets')
     tickets.add_argument('--state', choices=['pending','human','completed','cancelled'])
     tickets.add_argument('--conversation')
+    tickets.add_argument('--reason', choices=['explicit','low_confidence'])
     tickets.add_argument('--limit', type=int, default=50)
     tickets.add_argument('--after', type=int, default=0)
     args = parser.parse_args(argv)
@@ -41,7 +42,7 @@ def main(argv=None):
         if args.command == 'status':
             result = core.snapshot_counts()
         elif args.command == 'tickets':
-            result = core.ticket_page(limit=args.limit, after=args.after, state=args.state, conversation=args.conversation)
+            result = core.ticket_page(limit=args.limit, after=args.after, state=args.state, conversation=args.conversation, reason=args.reason)
         elif args.command == 'integrity':
             result = core.integrity()
         elif args.command == 'backup':

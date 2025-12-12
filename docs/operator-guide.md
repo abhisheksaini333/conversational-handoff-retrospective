@@ -76,3 +76,5 @@ Retention previews skip already-redacted tickets and count notes alongside trans
 Redaction responses include `changed`; false means the ticket was already redacted. Repeating a completed redaction does not append an audit event.
 
 Verify an exported conversation offline with `python -m handoff.cli verify-export export.json`. This validates SHA-256, schema and ticket records without opening a database. A digest validates file consistency, not authenticity or the identity of its author.
+
+Use `tickets --reason explicit` or `tickets --reason low_confidence` with the existing state/conversation filters to inspect routing cohorts.
