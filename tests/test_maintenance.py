@@ -171,3 +171,10 @@ class MaintenanceTests(unittest.TestCase):
             self.assertEqual(main(["--database",str(self.path),"tickets","--reason","low_confidence"]),0)
         self.assertEqual(len(json.loads(output.getvalue())["items"]),1)
         self.assertEqual(json.loads(output.getvalue())["items"][0]["conversation"],"low")
+
+    def test_server_configuration_rejects_invalid_bind_and_upstream_ports(self):
+        from handoff.server import make_server
+        for kwargs in ({"port":True},{"host":" "},{"port":65536},{"rasa_url":"http://localhost:99999"}):
+            with self.assertRaises(ValueError):
+                server=make_server(self.core,"local-test-credential",**kwargs)
+                server.server_close()

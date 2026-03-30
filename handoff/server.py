@@ -54,6 +54,8 @@ def resume_events(result):
 
 
 def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_token=None, request_timeout=5, resume_timeout=3, body_limit=65536):
+    if type(port) is not int or not 0 <= port <= 65535 or not isinstance(host, str) or not host.strip() or host != host.strip():
+        raise ValueError('host and port must describe a valid bind address')
     if not isinstance(token, str) or len(token)<16 or any(c.isspace() or ord(c)<33 or ord(c)>126 for c in token):
         raise ValueError('HANDOFF_TOKEN must contain at least 16 characters')
     if isinstance(request_timeout, bool) or not isinstance(request_timeout, (int,float)) or not math.isfinite(request_timeout) or not 0 < request_timeout <= 30:
@@ -64,6 +66,8 @@ def make_server(core, token, port=4340, host='127.0.0.1', rasa_url=None, rasa_to
         raise ValueError("body_limit must be 1..1048576 bytes")
     if rasa_url is not None:
         parsed = urllib.parse.urlsplit(rasa_url)
+        if parsed.port is not None and not 1 <= parsed.port <= 65535:
+            raise ValueError('RASA_URL port must be 1..65535')
         if parsed.scheme not in ('http', 'https') or not parsed.hostname or parsed.username or parsed.password or parsed.query or parsed.fragment:
             raise ValueError('RASA_URL must be an HTTP base URL without credentials, query or fragment')
     desk=SimulatedDesk(core.database)
