@@ -178,3 +178,17 @@ class MaintenanceTests(unittest.TestCase):
             with self.assertRaises(ValueError):
                 server=make_server(self.core,"local-test-credential",**kwargs)
                 server.server_close()
+
+    def test_http_query_budget_and_escape_validation(self):
+        import http.client,threading
+        from handoff.server import make_server
+        server=make_server(self.core,"local-test-credential",port=0)
+        thread=threading.Thread(target=lambda:server.serve_forever(poll_interval=.01),daemon=True);thread.start()
+        try:
+            for target in ("/health?bad=%GG","/health?"+"&".join(f"k{i}=v" for i in range(33))):
+                connection=http.client.HTTPConnection(*server.server_address,timeout=2)
+                try:
+                    connection.request("GET",target);response=connection.getresponse();response.read()
+                    self.assertEqual(response.status,400)
+                finally:connection.close()
+        finally:server.shutdown();server.server_close();thread.join()
