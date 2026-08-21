@@ -1,5 +1,6 @@
 """Calibrate on development examples; evaluate held-out synthetic utterances once."""
 import hashlib
+import math
 import json
 import platform
 import statistics
@@ -33,6 +34,11 @@ def parse(rows):
     return outputs
 
 def score(rows,threshold):
+    if type(threshold) not in (int,float) or not math.isfinite(threshold) or not 0 <= threshold <= 1 or not isinstance(rows,list) or not rows:
+        raise ValueError("routing evaluation requires rows and a finite threshold in [0,1]")
+    for row in rows:
+        if not isinstance(row,dict) or not isinstance(row.get("prediction"),str) or not row["prediction"].strip() or type(row.get("needs_human")) is not bool or type(row.get("confidence")) not in (int,float) or not math.isfinite(row["confidence"]) or not 0 <= row["confidence"] <= 1:
+            raise ValueError("invalid routing evaluation sample")
     false=missed=correct=0
     for row in rows:
         handoff=row['prediction']=='request_human' or row['confidence']<threshold

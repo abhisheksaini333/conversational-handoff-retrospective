@@ -192,3 +192,8 @@ class MaintenanceTests(unittest.TestCase):
                     self.assertEqual(response.status,400)
                 finally:connection.close()
         finally:server.shutdown();server.server_close();thread.join()
+
+    def test_routing_evaluation_rejects_invalid_samples(self):
+        from scripts.evaluate import score
+        for rows,threshold in (([],.5),([{"prediction":"greet","confidence":float("nan"),"needs_human":False}],.5),([{"prediction":"greet","confidence":.9,"needs_human":False}],True)):
+            with self.assertRaises(ValueError):score(rows,threshold)
