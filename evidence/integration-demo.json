@@ -1,0 +1,82 @@
+{
+  "executed_at": "2026-09-29T12:46:58Z",
+  "rasa_version": "2.8.14",
+  "checks": [
+    "form interrupted",
+    "human acknowledgement before pause",
+    "paused state survives Rasa restart",
+    "bot stays silent while human owns conversation",
+    "restart cannot bypass human ownership",
+    "authenticated completion",
+    "form resumed",
+    "order completed",
+    "completion idempotent",
+    "restart works after completion",
+    "desk failure stays unpaused",
+    "retry succeeds"
+  ],
+  "events": [
+    {
+      "sent": "/order_status",
+      "responses": [
+        {
+          "recipient_id": "demo-31e5dd2f9b",
+          "text": "What is the order number?"
+        }
+      ]
+    },
+    {
+      "sent": "/request_human",
+      "responses": [
+        {
+          "recipient_id": "demo-31e5dd2f9b",
+          "text": "The simulated human desk accepted your request. The assistant is paused until the ticket is completed."
+        }
+      ]
+    },
+    {
+      "sent": "Can you help me while I wait?",
+      "responses": []
+    },
+    {
+      "sent": "/restart",
+      "responses": []
+    },
+    {
+      "sent": "/restart",
+      "responses": []
+    },
+    {
+      "sent": "ORDER-1001",
+      "responses": [
+        {
+          "recipient_id": "demo-31e5dd2f9b",
+          "text": "Synthetic order ORDER-1001 is being prepared. This demo has no real customer data."
+        }
+      ]
+    },
+    {
+      "sent": "/restart",
+      "responses": []
+    },
+    {
+      "sent": "/request_human",
+      "responses": [
+        {
+          "recipient_id": "failed-c40124dbb0",
+          "text": "Your request is queued, but no person has accepted it yet. Please retry the human request."
+        }
+      ]
+    },
+    {
+      "sent": "/request_human",
+      "responses": [
+        {
+          "recipient_id": "failed-c40124dbb0",
+          "text": "The simulated human desk accepted your request. The assistant is paused until the ticket is completed."
+        }
+      ]
+    }
+  ],
+  "status": "passed"
+}

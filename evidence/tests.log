@@ -1,0 +1,32 @@
+test_acknowledgement_must_match_ticket (test_core.HandoffTests.test_acknowledgement_must_match_ticket) ... ok
+test_completed_ticket_cannot_resume_a_later_handoff (test_core.HandoffTests.test_completed_ticket_cannot_resume_a_later_handoff) ... ok
+test_completion_is_idempotent (test_core.HandoffTests.test_completion_is_idempotent) ... ok
+test_concurrent_messages_only_create_one_ticket (test_core.HandoffTests.test_concurrent_messages_only_create_one_ticket) ... ok
+test_desk_failure_keeps_pending_then_retry_succeeds (test_core.HandoffTests.test_desk_failure_keeps_pending_then_retry_succeeds) ... ok
+test_different_event_while_pending_reuses_ticket (test_core.HandoffTests.test_different_event_while_pending_reuses_ticket) ... ok
+test_duplicate_delivery_is_exact_replay_without_duplicate_ticket (test_core.HandoffTests.test_duplicate_delivery_is_exact_replay_without_duplicate_ticket) ... ok
+test_duplicate_dispatch_does_not_create_second_human_ticket (test_core.HandoffTests.test_duplicate_dispatch_does_not_create_second_human_ticket) ... ok
+test_event_id_cannot_be_reused_for_different_payload (test_core.HandoffTests.test_event_id_cannot_be_reused_for_different_payload) ... ok
+test_explicit_request_is_pending_until_human_acknowledges (test_core.HandoffTests.test_explicit_request_is_pending_until_human_acknowledges) ... ok
+test_failed_resume_callback_keeps_human_ownership (test_core.HandoffTests.test_failed_resume_callback_keeps_human_ownership) ... ok
+test_human_owned_conversation_suppresses_bot_reply (test_core.HandoffTests.test_human_owned_conversation_suppresses_bot_reply) ... ok
+test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) ... ok
+test_low_confidence_routes_to_human_but_confident_message_stays_bot (test_core.HandoffTests.test_low_confidence_routes_to_human_but_confident_message_stays_bot) ... ok
+test_omitted_and_empty_context_cannot_reuse_an_event_id (test_core.HandoffTests.test_omitted_and_empty_context_cannot_reuse_an_event_id) ... ok
+test_pending_ticket_cannot_complete (test_core.HandoffTests.test_pending_ticket_cannot_complete) ... ok
+test_restart_preserves_ticket_and_interrupted_form (test_core.HandoffTests.test_restart_preserves_ticket_and_interrupted_form) ... ok
+test_second_handoff_uses_fresh_tracker_context (test_core.HandoffTests.test_second_handoff_uses_fresh_tracker_context) ... ok
+test_conversation_ownership_requires_auth_and_tracks_completion (test_http.HttpTests.test_conversation_ownership_requires_auth_and_tracks_completion) ... ok
+test_handoff_and_resume (test_http.HttpTests.test_handoff_and_resume) ... ok
+test_invalid_confidence_is_400 (test_http.HttpTests.test_invalid_confidence_is_400) ... ok
+test_no_token_denied (test_http.HttpTests.test_no_token_denied) ... ok
+test_unavailable_desk_does_not_claim_human_ownership (test_http.HttpTests.test_unavailable_desk_does_not_claim_human_ownership) ... ok
+test_unknown_fields_rejected (test_http.HttpTests.test_unknown_fields_rejected) ... ok
+test_unknown_ticket_does_not_expose_traceback (test_http.HttpTests.test_unknown_ticket_does_not_expose_traceback) ... ok
+test_no_form_does_not_schedule_one (test_rasa_events.EventTests.test_no_form_does_not_schedule_one) ... ok
+test_resume_clears_handoff_and_restores_interrupted_form (test_rasa_events.EventTests.test_resume_clears_handoff_and_restores_interrupted_form) ... ok
+
+----------------------------------------------------------------------
+Ran 27 tests in 3.638s
+
+OK

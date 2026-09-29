@@ -1,0 +1,76 @@
+test_handoff_and_resume (test_http.HttpTests.test_handoff_and_resume) ... ERROR
+test_invalid_confidence_is_400 (test_http.HttpTests.test_invalid_confidence_is_400) ... FAIL
+test_no_token_denied (test_http.HttpTests.test_no_token_denied) ... FAIL
+test_unavailable_desk_does_not_claim_human_ownership (test_http.HttpTests.test_unavailable_desk_does_not_claim_human_ownership) ... FAIL
+test_unknown_fields_rejected (test_http.HttpTests.test_unknown_fields_rejected) ... FAIL
+test_unknown_ticket_does_not_expose_traceback (test_http.HttpTests.test_unknown_ticket_does_not_expose_traceback) ... FAIL
+
+======================================================================
+ERROR: test_handoff_and_resume (test_http.HttpTests.test_handoff_and_resume)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_http.py", line 43, in test_handoff_and_resume
+    code, result=self.request('/handoffs',self.payload())
+                 ~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_http.py", line 34, in request
+    return response.status,json.load(response)
+                           ~~~~~~~~~^^^^^^^^^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/json/__init__.py", line 293, in load
+    return loads(fp.read(),
+                 ~~~~~~~^^
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/http/client.py", line 492, in read
+    s = self.fp.read()
+  File "/Library/Frameworks/Python.framework/Versions/3.13/lib/python3.13/socket.py", line 719, in readinto
+    return self._sock.recv_into(b)
+           ~~~~~~~~~~~~~~~~~~~~^^^
+ConnectionResetError: [Errno 54] Connection reset by peer
+
+======================================================================
+FAIL: test_invalid_confidence_is_400 (test_http.HttpTests.test_invalid_confidence_is_400)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_http.py", line 61, in test_invalid_confidence_is_400
+    self.assertEqual(self.request('/handoffs',body)[0],400)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 400
+
+======================================================================
+FAIL: test_no_token_denied (test_http.HttpTests.test_no_token_denied)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_http.py", line 40, in test_no_token_denied
+    self.assertEqual(self.request('/tickets',token=False)[0],401)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 401
+
+======================================================================
+FAIL: test_unavailable_desk_does_not_claim_human_ownership (test_http.HttpTests.test_unavailable_desk_does_not_claim_human_ownership)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_http.py", line 53, in test_unavailable_desk_does_not_claim_human_ownership
+    self.assertEqual(code,202)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^
+AssertionError: 200 != 202
+
+======================================================================
+FAIL: test_unknown_fields_rejected (test_http.HttpTests.test_unknown_fields_rejected)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_http.py", line 70, in test_unknown_fields_rejected
+    self.assertEqual(self.request('/handoffs',body)[0],400)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 200 != 400
+
+======================================================================
+FAIL: test_unknown_ticket_does_not_expose_traceback (test_http.HttpTests.test_unknown_ticket_does_not_expose_traceback)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_http.py", line 65, in test_unknown_ticket_does_not_expose_traceback
+    self.assertEqual(code,404)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^
+AssertionError: 200 != 404
+
+----------------------------------------------------------------------
+Ran 6 tests in 3.042s
+
+FAILED (failures=5, errors=1)

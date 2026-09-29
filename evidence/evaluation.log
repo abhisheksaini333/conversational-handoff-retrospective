@@ -1,0 +1,20 @@
+{
+  "baseline": {
+    "false_handoffs": 2,
+    "missed_handoffs": 1,
+    "correct_routing_rate": 0.625,
+    "count": 8
+  },
+  "calibrated": {
+    "false_handoffs": 2,
+    "missed_handoffs": 1,
+    "correct_routing_rate": 0.625,
+    "count": 8
+  },
+  "calibrated_threshold": 0.3,
+  "intent_macro_f1_including_out_of_scope": 0.43452380952380953,
+  "latency_ms": {
+    "p50": 34.98037485405803,
+    "p95": 49.07579207792878
+  }
+}

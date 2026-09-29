@@ -1,0 +1,170 @@
+{
+  "executed_at": "2026-09-29T12:45:54Z",
+  "hardware": "macOS-26.5.1-arm64-arm-64bit-Mach-O",
+  "dataset_sha256": "1b42c93172d3ce4efeae1b6f0c3b7159987f2dd915bcfb13e3127618fc85bedd",
+  "baseline_threshold": 0.3,
+  "calibrated_threshold": 0.3,
+  "baseline": {
+    "false_handoffs": 2,
+    "missed_handoffs": 1,
+    "correct_routing_rate": 0.625,
+    "count": 8
+  },
+  "calibrated": {
+    "false_handoffs": 2,
+    "missed_handoffs": 1,
+    "correct_routing_rate": 0.625,
+    "count": 8
+  },
+  "deployed_threshold": 0.6,
+  "deployed": {
+    "false_handoffs": 3,
+    "missed_handoffs": 1,
+    "correct_routing_rate": 0.5,
+    "count": 8
+  },
+  "intent_macro_f1_including_out_of_scope": 0.43452380952380953,
+  "latency_ms": {
+    "p50": 34.98037485405803,
+    "p95": 49.07579207792878
+  },
+  "development": [
+    {
+      "text": "hello there",
+      "label": "greet",
+      "needs_human": false,
+      "prediction": "greet",
+      "confidence": 0.8637266159057617,
+      "latency_ms": 72.608333081007
+    },
+    {
+      "text": "good afternoon",
+      "label": "greet",
+      "needs_human": false,
+      "prediction": "greet",
+      "confidence": 0.7113844752311707,
+      "latency_ms": 48.4433330129832
+    },
+    {
+      "text": "can you check my parcel",
+      "label": "order_status",
+      "needs_human": false,
+      "prediction": "order_status",
+      "confidence": 0.8473600745201111,
+      "latency_ms": 35.552000161260366
+    },
+    {
+      "text": "what is the status of my shipment",
+      "label": "order_status",
+      "needs_human": false,
+      "prediction": "order_status",
+      "confidence": 0.6936531066894531,
+      "latency_ms": 42.26170782931149
+    },
+    {
+      "text": "a human agent please",
+      "label": "request_human",
+      "needs_human": true,
+      "prediction": "request_human",
+      "confidence": 0.9199552536010742,
+      "latency_ms": 43.00312511622906
+    },
+    {
+      "text": "I need to talk to a person",
+      "label": "request_human",
+      "needs_human": true,
+      "prediction": "request_human",
+      "confidence": 0.8330520987510681,
+      "latency_ms": 92.30516711249948
+    },
+    {
+      "text": "please explain orbital mechanics",
+      "label": "out_of_scope",
+      "needs_human": true,
+      "prediction": "request_human",
+      "confidence": 0.7982586026191711,
+      "latency_ms": 111.4885420538485
+    },
+    {
+      "text": "buy me a banana submarine",
+      "label": "out_of_scope",
+      "needs_human": true,
+      "prediction": "request_human",
+      "confidence": 0.8479993343353271,
+      "latency_ms": 39.491417119279504
+    }
+  ],
+  "held_out": [
+    {
+      "text": "hey support team",
+      "label": "greet",
+      "needs_human": false,
+      "prediction": "request_human",
+      "confidence": 0.8606409430503845,
+      "latency_ms": 32.17737493105233
+    },
+    {
+      "text": "hello good evening",
+      "label": "greet",
+      "needs_human": false,
+      "prediction": "greet",
+      "confidence": 0.8796685338020325,
+      "latency_ms": 29.29595811292529
+    },
+    {
+      "text": "is my package on the way",
+      "label": "order_status",
+      "needs_human": false,
+      "prediction": "order_status",
+      "confidence": 0.518784761428833,
+      "latency_ms": 49.07579207792878
+    },
+    {
+      "text": "track the shipment for me",
+      "label": "order_status",
+      "needs_human": false,
+      "prediction": "request_human",
+      "confidence": 0.4955452084541321,
+      "latency_ms": 35.789790796115994
+    },
+    {
+      "text": "speak to a support representative",
+      "label": "request_human",
+      "needs_human": true,
+      "prediction": "request_human",
+      "confidence": 0.7396121025085449,
+      "latency_ms": 32.165125012397766
+    },
+    {
+      "text": "please connect me with someone",
+      "label": "request_human",
+      "needs_human": true,
+      "prediction": "request_human",
+      "confidence": 0.9504888653755188,
+      "latency_ms": 49.06437499448657
+    },
+    {
+      "text": "solve my quantum physics homework",
+      "label": "out_of_scope",
+      "needs_human": true,
+      "prediction": "order_status",
+      "confidence": 0.7659242749214172,
+      "latency_ms": 38.87254185974598
+    },
+    {
+      "text": "compose a song about volcanoes",
+      "label": "out_of_scope",
+      "needs_human": true,
+      "prediction": "request_human",
+      "confidence": 0.6170931458473206,
+      "latency_ms": 34.17095891200006
+    }
+  ],
+  "limitations": [
+    "16 synthetic utterances only; not a representative benchmark.",
+    "Threshold comparison is offline; deployed Rasa threshold remains 0.6.",
+    "Rasa has no trained out_of_scope class; its macro F1 includes those errors.",
+    "Classifier routing quality is separate from protocol task-completion checks.",
+    "p95 is nearest-rank across 8 held-out requests; includes localhost network overhead."
+  ]
+}

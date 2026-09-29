@@ -1,0 +1,5 @@
+.git
+.env*
+var
+rasa/models
+**/__pycache__

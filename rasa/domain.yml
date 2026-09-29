@@ -1,0 +1,35 @@
+version: '2.0'
+intents:
+  - greet
+  - request_human
+  - order_status
+  - inform
+  - nlu_fallback
+slots:
+  order_id:
+    type: text
+    influence_conversation: false
+  handoff_ticket_id:
+    type: text
+    influence_conversation: false
+responses:
+  utter_greet:
+    - text: 'Hello. I can check an order or connect you to our simulated support desk.'
+  utter_ask_order_id:
+    - text: 'What is the order number?'
+  utter_order_status:
+    - text: 'Synthetic order {order_id} is being prepared. This demo has no real customer data.'
+forms:
+  order_form:
+    required_slots:
+      order_id:
+        - type: from_text
+          not_intent:
+            - request_human
+            - nlu_fallback
+actions:
+  - action_request_handoff
+  - action_restart
+session_config:
+  session_expiration_time: 0
+  carry_over_slots_to_new_session: true

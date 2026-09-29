@@ -1,0 +1,13 @@
+.env
+.env.*
+!.env.example
+__pycache__/
+*.py[cod]
+.venv/
+var/
+rasa/models/
+rasa/.rasa/
+rasa/.config/
+rasa/.keras/
+.cache/
+*.sqlite3

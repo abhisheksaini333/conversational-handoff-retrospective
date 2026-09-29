@@ -1,0 +1,36 @@
+version: '2.0'
+nlu:
+  - intent: greet
+    examples: |
+      - hello
+      - hi there
+      - good morning
+      - hello support
+      - hey
+      - good evening
+  - intent: request_human
+    examples: |
+      - I need a human
+      - connect me to a person
+      - please transfer me to support
+      - I want to speak to an agent
+      - human please
+      - let me talk to someone
+      - connect me to your support team
+      - I need personal assistance
+  - intent: order_status
+    examples: |
+      - where is my order
+      - check my order status
+      - track my delivery
+      - has my order shipped
+      - tell me the delivery status
+      - I want to find my parcel
+  - intent: inform
+    examples: |
+      - ORDER-1001
+      - order number 1234
+      - it is ORDER-2048
+      - my reference is 5000
+      - 123456
+      - the number is 9999

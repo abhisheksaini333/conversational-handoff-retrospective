@@ -1,0 +1,17 @@
+{
+  "status": "passed",
+  "checks": [
+    "form interrupted",
+    "human acknowledgement before pause",
+    "paused state survives Rasa restart",
+    "bot stays silent while human owns conversation",
+    "restart cannot bypass human ownership",
+    "authenticated completion",
+    "form resumed",
+    "order completed",
+    "completion idempotent",
+    "restart works after completion",
+    "desk failure stays unpaused",
+    "retry succeeds"
+  ]
+}

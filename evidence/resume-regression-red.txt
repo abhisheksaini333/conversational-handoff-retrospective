@@ -1,0 +1,27 @@
+test_no_form_does_not_schedule_one (test_rasa_events.EventTests.test_no_form_does_not_schedule_one) ... FAIL
+test_resume_clears_handoff_and_restores_interrupted_form (test_rasa_events.EventTests.test_resume_clears_handoff_and_restores_interrupted_form) ... FAIL
+
+======================================================================
+FAIL: test_no_form_does_not_schedule_one (test_rasa_events.EventTests.test_no_form_does_not_schedule_one)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_rasa_events.py", line 13, in test_no_form_does_not_schedule_one
+    self.assertEqual(len(events),3)
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^
+AssertionError: 2 != 3
+
+======================================================================
+FAIL: test_resume_clears_handoff_and_restores_interrupted_form (test_rasa_events.EventTests.test_resume_clears_handoff_and_restores_interrupted_form)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_rasa_events.py", line 9, in test_resume_clears_handoff_and_restores_interrupted_form
+    self.assertEqual(events[-1],{'event':'action','name':'action_listen'})
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: {'event': 'followup', 'name': 'order_form'} != {'event': 'action', 'name': 'action_listen'}
+- {'event': 'followup', 'name': 'order_form'}
++ {'event': 'action', 'name': 'action_listen'}
+
+----------------------------------------------------------------------
+Ran 2 tests in 0.001s
+
+FAILED (failures=2)

@@ -1,0 +1,48 @@
+name: conversational-handoff-retrospective
+services:
+  rasa-state-init:
+    image: alpine:3.22
+    user: '0:0'
+    network_mode: none
+    command: ['sh', '-c', 'chown 1001:0 /state && chmod 770 /state']
+    volumes:
+      - rasa-state:/state
+  coordinator:
+    build: .
+    environment:
+      HANDOFF_TOKEN: ${HANDOFF_TOKEN:?Run scripts/setup_env.py first}
+      RASA_TOKEN: ${RASA_TOKEN:?Run scripts/setup_env.py first}
+      RASA_URL: http://rasa:5005
+    ports:
+      - '127.0.0.1:4340:4340'
+    volumes:
+      - handoff-state:/state
+  actions:
+    image: rasa/rasa:2.8.14-full@sha256:7cf4d9174278e3a104cab9ac1e80bbca5d592f2f96a13e67c741479ce95c9ef1
+    platform: linux/amd64
+    entrypoint: python
+    command: ['-m', 'rasa_sdk', '--actions', 'actions', '--port', '5055']
+    working_dir: /app
+    environment:
+      HANDOFF_TOKEN: ${HANDOFF_TOKEN:?Run scripts/setup_env.py first}
+      HANDOFF_URL: http://coordinator:4340
+    volumes:
+      - ./rasa/actions:/app/actions:ro
+  rasa:
+    image: rasa/rasa:2.8.14-full@sha256:7cf4d9174278e3a104cab9ac1e80bbca5d592f2f96a13e67c741479ce95c9ef1
+    platform: linux/amd64
+    command: ['run', '--enable-api', '--auth-token', '${RASA_TOKEN}', '--endpoints', 'endpoints.yml', '--credentials', 'credentials.yml']
+    working_dir: /app
+    depends_on:
+      rasa-state-init:
+        condition: service_completed_successfully
+    ports:
+      - '127.0.0.1:4341:5005'
+    volumes:
+      - ./rasa:/app
+      - rasa-state:/state
+    environment:
+      RASA_TELEMETRY_ENABLED: 'false'
+volumes:
+  handoff-state:
+  rasa-state:

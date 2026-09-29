@@ -1,0 +1,165 @@
+"""Transactional local coordinator; no network or framework dependency."""
+import hashlib
+import json
+import math
+import sqlite3
+import uuid
+from contextlib import contextmanager
+
+
+def canonical(value):
+    return json.dumps(value, sort_keys=True, separators=(",", ":"), allow_nan=False)
+
+
+def identifier(value, name):
+    if not isinstance(value, str) or not value.strip() or len(value) > 128:
+        raise ValueError(name + " must be a nonempty string of at most 128 characters")
+    return value
+
+
+class Coordinator:
+    def __init__(self, database, threshold=0.6):
+        if isinstance(threshold, bool) or not isinstance(threshold, (int, float)) or not 0 <= threshold <= 1:
+            raise ValueError("threshold must be between zero and one")
+        self.database = database
+        self.threshold = threshold
+        with self._transaction() as db:
+            db.execute("CREATE TABLE IF NOT EXISTS conversations (id TEXT PRIMARY KEY, data TEXT NOT NULL)")
+            db.execute("CREATE TABLE IF NOT EXISTS tickets (id TEXT PRIMARY KEY, data TEXT NOT NULL)")
+            db.execute("CREATE TABLE IF NOT EXISTS receipts (scope TEXT, event TEXT, fingerprint TEXT NOT NULL, result TEXT NOT NULL, PRIMARY KEY(scope,event))")
+
+    @contextmanager
+    def _transaction(self):
+        db = sqlite3.connect(self.database, timeout=10)
+        try:
+            db.execute("BEGIN IMMEDIATE")
+            yield db
+            db.commit()
+        except BaseException:
+            db.rollback()
+            raise
+        finally:
+            db.close()
+
+    @staticmethod
+    def _get(db, table, key):
+        # table is always a fixed internal constant, never caller input.
+        row = db.execute("SELECT data FROM " + table + " WHERE id=?", (key,)).fetchone()
+        return json.loads(row[0]) if row else None
+
+    @staticmethod
+    def _put(db, table, key, data):
+        db.execute("INSERT INTO " + table + "(id,data) VALUES(?,?) ON CONFLICT(id) DO UPDATE SET data=excluded.data", (key, canonical(data)))
+
+    @staticmethod
+    def _replay(db, scope, event, fingerprint):
+        row = db.execute("SELECT fingerprint,result FROM receipts WHERE scope=? AND event=?", (scope, event)).fetchone()
+        if row:
+            if row[0] != fingerprint:
+                raise ValueError("event ID was reused for different content")
+            return json.loads(row[1])
+        return None
+
+    @staticmethod
+    def _receipt(db, scope, event, fingerprint, result):
+        db.execute("INSERT INTO receipts VALUES(?,?,?,?)", (scope, event, fingerprint, canonical(result)))
+
+    def conversation(self, conversation):
+        with self._transaction() as db:
+            return self._get(db, "conversations", conversation)
+
+    def ticket(self, ticket_id):
+        with self._transaction() as db:
+            result = self._get(db, "tickets", ticket_id)
+            if result is None:
+                raise KeyError("ticket not found")
+            return result
+
+    def tickets(self):
+        with self._transaction() as db:
+            return [json.loads(row[0]) for row in db.execute("SELECT data FROM tickets ORDER BY rowid")]
+
+    def message(self, conversation, event_id, text, intent, confidence, active_form=None, context=None):
+        identifier(conversation, "conversation")
+        identifier(event_id, "event_id")
+        identifier(intent, "intent")
+        if not isinstance(text, str) or not text.strip() or len(text) > 2000:
+            raise ValueError("text must contain 1 to 2000 characters")
+        if isinstance(confidence, bool) or not isinstance(confidence, (int, float)) or not math.isfinite(confidence) or not 0 <= confidence <= 1:
+            raise ValueError("confidence must be finite and between zero and one")
+        if active_form is not None:
+            identifier(active_form, "active_form")
+        context_provided = context is not None
+        context = [] if context is None else context
+        if not isinstance(context, list) or len(context) > 20:
+            raise ValueError("context must be a list of at most 20 messages")
+        for item in context:
+            if not isinstance(item, dict) or set(item) != {"role", "text"} or item["role"] not in ("user", "assistant") or not isinstance(item["text"], str) or len(item["text"]) > 2000:
+                raise ValueError("invalid context message")
+        fingerprint = hashlib.sha256(canonical([text, intent, confidence, active_form, context_provided, context]).encode()).hexdigest()
+        with self._transaction() as db:
+            prior = self._replay(db, "message:"+conversation, event_id, fingerprint)
+            if prior is not None:
+                return prior
+            state = self._get(db, "conversations", conversation) or {"id": conversation, "state": "bot", "ticket_id": None, "form": None, "context": context}
+            if context_provided:
+                state["context"] = context
+            state["context"] = (state["context"] + [{"role": "user", "text": text}])[-20:]
+            if state["state"] == "bot" and (intent in ("request_human", "nlu_fallback") or confidence < self.threshold):
+                state.update(state="pending", ticket_id=str(uuid.uuid4()), form=active_form)
+                ticket = {"id": state["ticket_id"], "conversation": conversation, "state": "pending", "form": active_form, "context": state["context"], "reason": "explicit" if intent == "request_human" else "low_confidence", "delivery_attempts": 0}
+                self._put(db, "tickets", ticket["id"], ticket)
+            elif state["state"] in ("pending", "human"):
+                ticket = self._get(db, "tickets", state["ticket_id"])
+                ticket["context"] = state["context"]
+                self._put(db, "tickets", ticket["id"], ticket)
+            reply = {"bot": "I can help with your order.", "pending": "Your request is queued; a person has not accepted it yet.", "human": None}[state["state"]]
+            result = {"conversation": conversation, "state": state["state"], "ticket_id": state["ticket_id"], "bot_reply": reply}
+            self._put(db, "conversations", conversation, state)
+            self._receipt(db, "message:"+conversation, event_id, fingerprint, result)
+            return result
+
+    def dispatch(self, ticket_id, desk):
+        with self._transaction() as db:
+            ticket = self._get(db, "tickets", ticket_id)
+            if ticket is None:
+                raise KeyError("ticket not found")
+            if ticket["state"] != "pending":
+                return self._get(db, "conversations", ticket["conversation"])
+            ticket["delivery_attempts"] += 1
+            self._put(db, "tickets", ticket_id, ticket)
+        # Do not hold the SQLite write lock across human-service I/O.
+        ack = desk.accept(ticket)
+        if not isinstance(ack, dict) or ack.get("accepted") is not True or ack.get("ticket_id") != ticket_id:
+            raise ValueError("human acknowledgement does not match this ticket")
+        with self._transaction() as db:
+            latest = self._get(db, "tickets", ticket_id)
+            state = self._get(db, "conversations", ticket["conversation"])
+            if latest["state"] == "pending" and state["ticket_id"] == ticket_id:
+                latest["state"] = state["state"] = "human"
+                self._put(db, "tickets", ticket_id, latest)
+                self._put(db, "conversations", state["id"], state)
+            return state
+
+    def complete(self, ticket_id, event_id, before_resume=None):
+        identifier(event_id, "event_id")
+        with self._transaction() as db:
+            prior = self._replay(db, "complete:"+ticket_id, event_id, ticket_id)
+            if prior is not None:
+                return prior
+            ticket = self._get(db, "tickets", ticket_id)
+            if ticket is None:
+                raise KeyError("ticket not found")
+            state = self._get(db, "conversations", ticket["conversation"])
+            if ticket["state"] != "human" or state["ticket_id"] != ticket_id:
+                raise ValueError("only the active acknowledged ticket may complete")
+            result = {"conversation": state["id"], "state": "bot", "ticket_id": ticket_id, "resume_form": ticket["form"]}
+            # Bounded callback; a failed resume leaves ownership with the human.
+            if before_resume is not None:
+                before_resume(result)
+            ticket["state"] = "completed"
+            state.update(state="bot", ticket_id=None, form=ticket["form"])
+            self._put(db, "tickets", ticket_id, ticket)
+            self._put(db, "conversations", state["id"], state)
+            self._receipt(db, "complete:"+ticket_id, event_id, ticket_id, result)
+            return result

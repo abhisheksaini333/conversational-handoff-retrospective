@@ -1,0 +1,223 @@
+test_acknowledgement_must_match_ticket (test_core.HandoffTests.test_acknowledgement_must_match_ticket) ... ERROR
+test_completed_ticket_cannot_resume_a_later_handoff (test_core.HandoffTests.test_completed_ticket_cannot_resume_a_later_handoff) ... ERROR
+test_completion_is_idempotent (test_core.HandoffTests.test_completion_is_idempotent) ... ERROR
+test_concurrent_messages_only_create_one_ticket (test_core.HandoffTests.test_concurrent_messages_only_create_one_ticket) ... ok
+test_desk_failure_keeps_pending_then_retry_succeeds (test_core.HandoffTests.test_desk_failure_keeps_pending_then_retry_succeeds) ... ERROR
+test_different_event_while_pending_reuses_ticket (test_core.HandoffTests.test_different_event_while_pending_reuses_ticket) ... ERROR
+test_duplicate_delivery_is_exact_replay_without_duplicate_ticket (test_core.HandoffTests.test_duplicate_delivery_is_exact_replay_without_duplicate_ticket) ... ERROR
+test_duplicate_dispatch_does_not_create_second_human_ticket (test_core.HandoffTests.test_duplicate_dispatch_does_not_create_second_human_ticket) ... ERROR
+test_event_id_cannot_be_reused_for_different_payload (test_core.HandoffTests.test_event_id_cannot_be_reused_for_different_payload) ... FAIL
+test_explicit_request_is_pending_until_human_acknowledges (test_core.HandoffTests.test_explicit_request_is_pending_until_human_acknowledges) ... FAIL
+test_failed_resume_callback_keeps_human_ownership (test_core.HandoffTests.test_failed_resume_callback_keeps_human_ownership) ... ERROR
+test_human_owned_conversation_suppresses_bot_reply (test_core.HandoffTests.test_human_owned_conversation_suppresses_bot_reply) ... ERROR
+test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) ...
+  test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) (confidence=-1) ... FAIL
+  test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) (confidence=2) ... FAIL
+  test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) (confidence=nan) ... FAIL
+  test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) (confidence=inf) ... FAIL
+  test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) (confidence='0.1') ... FAIL
+  test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) (confidence=True) ... FAIL
+test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) ... FAIL
+test_low_confidence_routes_to_human_but_confident_message_stays_bot (test_core.HandoffTests.test_low_confidence_routes_to_human_but_confident_message_stays_bot) ... FAIL
+test_pending_ticket_cannot_complete (test_core.HandoffTests.test_pending_ticket_cannot_complete) ... ERROR
+test_restart_preserves_ticket_and_interrupted_form (test_core.HandoffTests.test_restart_preserves_ticket_and_interrupted_form) ... ERROR
+
+======================================================================
+ERROR: test_acknowledgement_must_match_ticket (test_core.HandoffTests.test_acknowledgement_must_match_ticket)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 81, in test_acknowledgement_must_match_ticket
+    self.core.dispatch(ticket, WrongDesk())
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Coordinator' object has no attribute 'dispatch'
+
+======================================================================
+ERROR: test_completed_ticket_cannot_resume_a_later_handoff (test_core.HandoffTests.test_completed_ticket_cannot_resume_a_later_handoff)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 120, in test_completed_ticket_cannot_resume_a_later_handoff
+    self.core.dispatch(first, self.desk)
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Coordinator' object has no attribute 'dispatch'
+
+======================================================================
+ERROR: test_completion_is_idempotent (test_core.HandoffTests.test_completion_is_idempotent)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 99, in test_completion_is_idempotent
+    self.core.dispatch(ticket, self.desk)
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Coordinator' object has no attribute 'dispatch'
+
+======================================================================
+ERROR: test_desk_failure_keeps_pending_then_retry_succeeds (test_core.HandoffTests.test_desk_failure_keeps_pending_then_retry_succeeds)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 70, in test_desk_failure_keeps_pending_then_retry_succeeds
+    self.core.dispatch(ticket, self.desk)
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Coordinator' object has no attribute 'dispatch'
+
+======================================================================
+ERROR: test_different_event_while_pending_reuses_ticket (test_core.HandoffTests.test_different_event_while_pending_reuses_ticket)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 55, in test_different_event_while_pending_reuses_ticket
+    self.assertEqual(len(self.core.tickets()), 1)
+                         ^^^^^^^^^^^^^^^^^
+AttributeError: 'Coordinator' object has no attribute 'tickets'
+
+======================================================================
+ERROR: test_duplicate_delivery_is_exact_replay_without_duplicate_ticket (test_core.HandoffTests.test_duplicate_delivery_is_exact_replay_without_duplicate_ticket)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 47, in test_duplicate_delivery_is_exact_replay_without_duplicate_ticket
+    self.core.dispatch(first["ticket_id"], self.desk)
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Coordinator' object has no attribute 'dispatch'
+
+======================================================================
+ERROR: test_duplicate_dispatch_does_not_create_second_human_ticket (test_core.HandoffTests.test_duplicate_dispatch_does_not_create_second_human_ticket)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 86, in test_duplicate_dispatch_does_not_create_second_human_ticket
+    self.core.dispatch(ticket, self.desk)
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Coordinator' object has no attribute 'dispatch'
+
+======================================================================
+ERROR: test_failed_resume_callback_keeps_human_ownership (test_core.HandoffTests.test_failed_resume_callback_keeps_human_ownership)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 110, in test_failed_resume_callback_keeps_human_ownership
+    self.core.dispatch(ticket, self.desk)
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Coordinator' object has no attribute 'dispatch'
+
+======================================================================
+ERROR: test_human_owned_conversation_suppresses_bot_reply (test_core.HandoffTests.test_human_owned_conversation_suppresses_bot_reply)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 92, in test_human_owned_conversation_suppresses_bot_reply
+    self.core.dispatch(ticket, self.desk)
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Coordinator' object has no attribute 'dispatch'
+
+======================================================================
+ERROR: test_pending_ticket_cannot_complete (test_core.HandoffTests.test_pending_ticket_cannot_complete)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 106, in test_pending_ticket_cannot_complete
+    self.core.complete(self.request()["ticket_id"], "c1")
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Coordinator' object has no attribute 'complete'
+
+======================================================================
+ERROR: test_restart_preserves_ticket_and_interrupted_form (test_core.HandoffTests.test_restart_preserves_ticket_and_interrupted_form)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 60, in test_restart_preserves_ticket_and_interrupted_form
+    self.core.dispatch(first["ticket_id"], self.desk)
+    ^^^^^^^^^^^^^^^^^^
+AttributeError: 'Coordinator' object has no attribute 'dispatch'
+
+======================================================================
+FAIL: test_event_id_cannot_be_reused_for_different_payload (test_core.HandoffTests.test_event_id_cannot_be_reused_for_different_payload)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 146, in test_event_id_cannot_be_reused_for_different_payload
+    with self.assertRaises(ValueError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_explicit_request_is_pending_until_human_acknowledges (test_core.HandoffTests.test_explicit_request_is_pending_until_human_acknowledges)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 36, in test_explicit_request_is_pending_until_human_acknowledges
+    self.assertEqual(result["state"], "pending")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'bot' != 'pending'
+- bot
++ pending
+
+
+======================================================================
+FAIL: test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) (confidence=-1)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 136, in test_invalid_input_rejected_without_side_effects
+    with self.subTest(confidence=confidence), self.assertRaises(ValueError):
+                                              ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) (confidence=2)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 136, in test_invalid_input_rejected_without_side_effects
+    with self.subTest(confidence=confidence), self.assertRaises(ValueError):
+                                              ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) (confidence=nan)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 136, in test_invalid_input_rejected_without_side_effects
+    with self.subTest(confidence=confidence), self.assertRaises(ValueError):
+                                              ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) (confidence=inf)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 136, in test_invalid_input_rejected_without_side_effects
+    with self.subTest(confidence=confidence), self.assertRaises(ValueError):
+                                              ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) (confidence='0.1')
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 136, in test_invalid_input_rejected_without_side_effects
+    with self.subTest(confidence=confidence), self.assertRaises(ValueError):
+                                              ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects) (confidence=True)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 136, in test_invalid_input_rejected_without_side_effects
+    with self.subTest(confidence=confidence), self.assertRaises(ValueError):
+                                              ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_invalid_input_rejected_without_side_effects (test_core.HandoffTests.test_invalid_input_rejected_without_side_effects)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 138, in test_invalid_input_rejected_without_side_effects
+    with self.assertRaises(ValueError):
+         ~~~~~~~~~~~~~~~~~^^^^^^^^^^^^
+AssertionError: ValueError not raised
+
+======================================================================
+FAIL: test_low_confidence_routes_to_human_but_confident_message_stays_bot (test_core.HandoffTests.test_low_confidence_routes_to_human_but_confident_message_stays_bot)
+----------------------------------------------------------------------
+Traceback (most recent call last):
+  File "/Users/abhishek/Documents/datavedam/conversational-handoff-retrospective/tests/test_core.py", line 43, in test_low_confidence_routes_to_human_but_confident_message_stays_bot
+    self.assertEqual(self.request("m2", confidence=0.2, intent="order_status")["state"], "pending")
+    ~~~~~~~~~~~~~~~~^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+AssertionError: 'bot' != 'pending'
+- bot
++ pending
+
+
+----------------------------------------------------------------------
+Ran 16 tests in 0.020s
+
+FAILED (failures=10, errors=11)
