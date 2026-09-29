@@ -1,7 +1,5 @@
 # Verification ledger
 
-Verification date: 2026-09-29.
-
 | Check | Status |
 |---|---|
 | Core state and persistence tests | 18 passed |
