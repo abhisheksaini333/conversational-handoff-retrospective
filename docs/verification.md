@@ -9,9 +9,9 @@ Verification date: 2026-09-29.
 | Rasa resume-event shape tests | 2 passed |
 | Historical Rasa 2.8.14 runtime | Version command executed; Python 3.8.10, SDK 2.8.2 |
 | NLU/Core training | Completed using original synthetic training data |
-| Real Rasa integration demo | 12 checks: interruption, acknowledgement, durable pause after process restart, guarded user restart, resume, completion, replay, failure and retry |
+| Real Rasa integration demo | 12 checks passed: interruption, acknowledgement, durable pause after process restart, guarded user restart, resume, completion, replay, failure and retry |
 | Held-out natural-language evaluation | 8 development + 8 held-out utterances; baseline/calibrated routing accuracy 0.625, deployed threshold routing accuracy 0.5, intent macro F1 0.435; calibration did not improve held-out routing |
-| GitHub CI | Not yet published/run |
+| GitHub CI | [Hosted Ubuntu run](https://github.com/abhisheksaini333/conversational-handoff-retrospective/actions/runs/36570601790) passed at `19e1d0d`: 27 tests, pinned Rasa training/startup, all 12 integration checks and natural-language evaluation |
 
 `evidence/tdd-red.txt` and `evidence/http-red.txt` record initial failures before implementation. The first training attempt used an incompatible classifier/featurizer combination; the pipeline was corrected to DIETClassifier with sparse count features and trained successfully. `evidence/tests.log` contains the current passing test run.
 
