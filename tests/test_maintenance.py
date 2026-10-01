@@ -197,3 +197,9 @@ class MaintenanceTests(unittest.TestCase):
         from scripts.evaluate import score
         for rows,threshold in (([],.5),([{"prediction":"greet","confidence":float("nan"),"needs_human":False}],.5),([{"prediction":"greet","confidence":.9,"needs_human":False}],True)):
             with self.assertRaises(ValueError):score(rows,threshold)
+
+    def test_evaluation_routes_fallback_like_the_coordinator(self):
+        from scripts.evaluate import score
+        result=score([{"prediction":"nlu_fallback","confidence":.99,"needs_human":True}],.6)
+        self.assertEqual(result["missed_handoffs"],0)
+        self.assertEqual(result["correct_routing_rate"],1)

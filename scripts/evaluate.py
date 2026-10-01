@@ -41,7 +41,7 @@ def score(rows,threshold):
             raise ValueError("invalid routing evaluation sample")
     false=missed=correct=0
     for row in rows:
-        handoff=row['prediction']=='request_human' or row['confidence']<threshold
+        handoff=row['prediction'] in ('request_human','nlu_fallback') or row['confidence']<threshold
         false+=int(handoff and not row['needs_human'])
         missed+=int(not handoff and row['needs_human'])
         correct+=int(handoff==row['needs_human'])
